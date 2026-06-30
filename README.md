@@ -44,6 +44,35 @@ http://localhost:3000
 
 No environment variables are required for the local offline-first demo. Copy `.env.example` to `.env.local` only when Supabase sync/auth or OpenAI plan generation is needed.
 
+## Local Network Access
+
+The development server binds to `0.0.0.0` on port `3000`, so other devices on the same local network can open the app with this URL:
+
+```text
+http://<local-machine-ip>:3000
+```
+
+On macOS, find the Wi-Fi IP address with:
+
+```bash
+ipconfig getifaddr en0
+```
+
+If that command returns nothing, list network hardware ports and use the device name for the active adapter:
+
+```bash
+networksetup -listallhardwareports
+ipconfig getifaddr <device>
+```
+
+For example:
+
+```text
+http://192.168.1.42:3000
+```
+
+If the app does not load from another device, check that both devices are on the same network and that the macOS firewall allows incoming connections for the dev server.
+
 Local Docker/Node runs persist user data to `data/local-store.json` by default. Set `LOCAL_DATA_DIR` for direct Node.js runs or `LOCAL_DATA_HOST_DIR` for Docker when the JSON storage should live outside the repository/container. Plans and exercise catalog changes survive restarts without Supabase.
 
 Target deployment is Vercel. Docker remains a valid local execution path for development and testing.
