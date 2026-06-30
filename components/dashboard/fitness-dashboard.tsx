@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Trash2
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +45,6 @@ import {
   assignPlanToLocalUser,
   belongsToLocalUser,
   getKnownLocalUserIds,
-  localUserStorageKey,
   normalizeLocalUserId
 } from "@/services/local-user-context";
 import {
@@ -66,18 +65,13 @@ export function FitnessDashboard() {
   const [allMeasurements, setAllMeasurements] = useState<BodyMeasurement[]>(demoMeasurements);
   const [allCompletedExercises, setAllCompletedExercises] = useState<CompletedExercise[]>([]);
   const [catalog, setCatalog] = useState<ExerciseCatalogItem[]>(exerciseCatalog);
-  const [activeLocalProfile, setActiveLocalProfile] = useState(() =>
-    typeof window === "undefined" ? "" : window.localStorage.getItem(localUserStorageKey) ?? ""
-  );
-  const [localUserIdInput, setLocalUserIdInput] = useState(() =>
-    typeof window === "undefined" ? "" : window.localStorage.getItem(localUserStorageKey) ?? ""
-  );
+  const [activeLocalProfile, setActiveLocalProfile] = useState("");
+  const [localUserIdInput, setLocalUserIdInput] = useState("");
   const [isStorageReady, setIsStorageReady] = useState(false);
   const [selectedPlanDate, setSelectedPlanDate] = useState<string>();
   const [currentDate] = useState(() => new Date());
   const hasActiveLocalProfile = activeLocalProfile.trim().length > 0;
   const activeLocalUserId = hasActiveLocalProfile ? normalizeLocalUserId(activeLocalProfile) : "";
-  const initialLocalUserIdRef = useRef(activeLocalUserId);
   const plans = useMemo(
     () => allPlans.filter((plan) => belongsToLocalUser(plan.userId, activeLocalUserId)),
     [activeLocalUserId, allPlans]
@@ -140,13 +134,7 @@ export function FitnessDashboard() {
 
         if (fileSnapshot && hasLocalFileStoreData(fileSnapshot)) {
           const nextCatalog = fileSnapshot.initialized || fileSnapshot.exerciseCatalog.length > 0 ? fileSnapshot.exerciseCatalog : exerciseCatalog;
-          const localContext = initialLocalUserIdRef.current
-            ? assignMissingLocalUserContext({
-                plans: fileSnapshot.plans,
-                measurements: fileSnapshot.bodyMeasurements,
-                userId: initialLocalUserIdRef.current
-              })
-            : { plans: fileSnapshot.plans, measurements: fileSnapshot.bodyMeasurements };
+          const localContext = { plans: fileSnapshot.plans, measurements: fileSnapshot.bodyMeasurements };
           setAllPlans(localContext.plans);
           setAllMeasurements(localContext.measurements);
           setAllCompletedExercises(fileSnapshot.completedExercises);
@@ -170,13 +158,7 @@ export function FitnessDashboard() {
         }
 
         const seededCatalog = seeded.exerciseCatalog.length > 0 ? seeded.exerciseCatalog : exerciseCatalog;
-        const localContext = initialLocalUserIdRef.current
-          ? assignMissingLocalUserContext({
-              plans: seeded.plans,
-              measurements: seeded.bodyMeasurements,
-              userId: initialLocalUserIdRef.current
-            })
-          : { plans: seeded.plans, measurements: seeded.bodyMeasurements };
+        const localContext = { plans: seeded.plans, measurements: seeded.bodyMeasurements };
         const seededSnapshot = createLocalFileStoreSnapshot({
           plans: localContext.plans,
           bodyMeasurements: localContext.measurements,
@@ -190,13 +172,7 @@ export function FitnessDashboard() {
       })
       .catch(() => {
         if (!cancelled) {
-          const localContext = initialLocalUserIdRef.current
-            ? assignMissingLocalUserContext({
-                plans: [demoPlan],
-                measurements: demoMeasurements,
-                userId: initialLocalUserIdRef.current
-              })
-            : { plans: [demoPlan], measurements: demoMeasurements };
+          const localContext = { plans: [demoPlan], measurements: demoMeasurements };
           setAllPlans(localContext.plans);
           setAllMeasurements(localContext.measurements);
           setAllCompletedExercises([]);
@@ -215,12 +191,8 @@ export function FitnessDashboard() {
   }, []);
 
   useEffect(() => {
-    if (activeLocalUserId) {
-      window.localStorage.setItem(localUserStorageKey, activeLocalUserId);
-    } else {
-      window.localStorage.removeItem(localUserStorageKey);
-    }
-  }, [activeLocalUserId]);
+    window.localStorage.removeItem("fitness-pwa.local-user-id");
+  }, []);
 
   useEffect(() => {
     if (planDayEntries.length === 0) {

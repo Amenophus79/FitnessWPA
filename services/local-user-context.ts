@@ -1,7 +1,6 @@
 import type { BodyMeasurement, Plan } from "@/types/domain";
 
 export const defaultLocalUserId = "local-user";
-export const localUserStorageKey = "fitness-pwa.local-user-id";
 
 export function normalizeLocalUserId(value?: string) {
   return value?.trim() || defaultLocalUserId;
