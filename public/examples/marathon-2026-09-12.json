@@ -1,0 +1,212 @@
+{
+  "version": "1.0",
+  "title": "Marathon 2026-09-12",
+  "description": "Running base and race-specific sharpening with Tabata support sessions.",
+  "startDate": "2026-08-03",
+  "endDate": "2026-09-12",
+  "timezone": "Europe/Berlin",
+  "exercises": [
+    {
+      "id": "run_warmup",
+      "name": "Dynamic running warmup",
+      "sport": "running",
+      "muscles": ["calves", "hamstrings", "glutes", "hips"],
+      "description": "Leg swings, skips, relaxed strides, and mobility before faster running.",
+      "imageUrl": "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=sfF4f-QGRn8",
+      "defaultDurationSeconds": 600,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 0
+    },
+    {
+      "id": "long_run",
+      "name": "Progressive long run block",
+      "sport": "running",
+      "muscles": ["legs", "heart", "lungs"],
+      "description": "A long aerobic run that finishes with a controlled steady segment.",
+      "imageUrl": "https://images.unsplash.com/photo-1502904550040-7534597429ae?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=9L2b2khySLE",
+      "defaultDurationSeconds": 6300,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 0
+    },
+    {
+      "id": "burpee",
+      "name": "Burpee",
+      "sport": "tabata",
+      "muscles": ["full_body", "legs", "chest", "core"],
+      "description": "Full-body conditioning movement for Tabata timing.",
+      "imageUrl": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=dZgVxmf6jkA",
+      "defaultDurationSeconds": 20,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 10
+    },
+    {
+      "id": "mountain_climber",
+      "name": "Mountain climber",
+      "sport": "tabata",
+      "muscles": ["core", "hip_flexors", "shoulders"],
+      "description": "Alternating knee drives from a strong plank.",
+      "imageUrl": "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=nmwgirgXLYM",
+      "defaultDurationSeconds": 20,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 10
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "sport": "strength",
+      "muscles": ["core", "shoulders", "glutes"],
+      "description": "Static core hold with steady breathing.",
+      "imageUrl": "https://images.unsplash.com/photo-1562771242-a02d9090c90c?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=pSHjTRCQxIw",
+      "defaultDurationSeconds": 45,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 20
+    }
+  ],
+  "weeks": [
+    {
+      "weekNumber": 1,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-08-03",
+          "activities": [
+            {
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "hard",
+              "plannedDurationMinutes": 50,
+              "plannedDistanceKm": 9,
+              "notes": "6 x 800 m at 10K effort with easy jog recoveries.",
+              "exercises": [{ "exerciseId": "run_warmup" }]
+            },
+            {
+              "name": "Mobility reset",
+              "sport": "mobility",
+              "intensity": "easy",
+              "plannedDurationMinutes": 15,
+              "exercises": [{ "exerciseId": "plank", "rounds": 2 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-08-04",
+          "activities": [
+            {
+              "name": "Tabata engine",
+              "sport": "tabata",
+              "intensity": "hard",
+              "plannedDurationMinutes": 24,
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 4 },
+                { "exerciseId": "mountain_climber", "rounds": 4 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-08-05",
+          "activities": [
+            {
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 45,
+              "plannedDistanceKm": 8,
+              "exercises": [{ "exerciseId": "run_warmup" }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-08-07",
+          "activities": [
+            {
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 105,
+              "plannedDistanceKm": 19,
+              "exercises": [{ "exerciseId": "long_run" }]
+            },
+            {
+              "name": "Short Tabata finisher",
+              "sport": "tabata",
+              "intensity": "hard",
+              "plannedDurationMinutes": 8,
+              "exercises": [{ "exerciseId": "mountain_climber", "rounds": 4 }]
+            }
+          ]
+        },
+        {
+          "weekday": "sunday",
+          "date": "2026-08-09",
+          "activities": [
+            {
+              "name": "Tabata mobility blend",
+              "sport": "tabata",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 20,
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 2 },
+                { "exerciseId": "plank", "rounds": 2 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notificationRules": [
+    {
+      "id": "running_reminder",
+      "kind": "sport_specific",
+      "label": "Running reminder",
+      "enabled": true,
+      "time": "06:45",
+      "sports": ["running"],
+      "message": "{activity} starts soon. Check shoes, route, and hydration.",
+      "leadTimeMinutes": 30
+    },
+    {
+      "id": "tabata_reminder",
+      "kind": "sport_specific",
+      "label": "Tabata reminder",
+      "enabled": true,
+      "time": "18:00",
+      "sports": ["tabata"],
+      "message": "Tabata session: warm up first, then move sharply.",
+      "leadTimeMinutes": 15
+    },
+    {
+      "id": "long_run_reminder",
+      "kind": "weekday",
+      "label": "Long run reminder",
+      "enabled": true,
+      "time": "07:30",
+      "weekdays": ["friday"],
+      "message": "Progressive long run today. Pack gels and keep early kilometers easy."
+    }
+  ],
+  "bodyMeasurements": [
+    {
+      "measuredAt": "2026-08-02",
+      "weightKg": 78.4,
+      "bmi": 23.8,
+      "bodyFatPercent": 17.5,
+      "waistCm": 84,
+      "hipCm": 96,
+      "chestCm": 102,
+      "armCm": 34,
+      "thighCm": 57,
+      "restingHeartRate": 49,
+      "vo2Max": 53
+    }
+  ]
+}

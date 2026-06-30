@@ -1,0 +1,817 @@
+{
+  "version": "1.0",
+  "title": "Marathon 2026-09-12",
+  "description": "Six-week marathon sharpening plan with Monday interval/sprint work, Wednesday easy runs, Friday progressive long runs, Tuesday and Sunday Tabata sessions, weekly measurements, notifications, media, preview timing, and completion records.",
+  "startDate": "2026-08-03",
+  "endDate": "2026-09-12",
+  "timezone": "Europe/Berlin",
+  "exercises": [
+    {
+      "id": "interval_sprint_run",
+      "name": "Interval / sprint block",
+      "sport": "running",
+      "muscles": ["calves", "hamstrings", "quads", "glutes", "heart", "lungs"],
+      "description": "Fast running intervals with controlled recoveries for speed, mechanics, and VO2 stimulus.",
+      "imageUrl": "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=PH-3cHxXAK0",
+      "defaultDurationSeconds": 3000,
+      "previewDurationSeconds": 15,
+      "restDurationSeconds": 0
+    },
+    {
+      "id": "easy_run_block",
+      "name": "Easy run block",
+      "sport": "running",
+      "muscles": ["legs", "heart", "lungs"],
+      "description": "Conversational aerobic running for recovery, durability, and weekly mileage.",
+      "imageUrl": "https://images.unsplash.com/photo-1502904550040-7534597429ae?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=brFHyOtTwH4",
+      "defaultDurationSeconds": 2700,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 0
+    },
+    {
+      "id": "progressive_long_run",
+      "name": "Progressive long run block",
+      "sport": "running",
+      "muscles": ["legs", "glutes", "heart", "lungs"],
+      "description": "Long aerobic run that starts easy and finishes steady without crossing race effort.",
+      "imageUrl": "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=9L2b2khySLE",
+      "defaultDurationSeconds": 7200,
+      "previewDurationSeconds": 20,
+      "restDurationSeconds": 0
+    },
+    {
+      "id": "marathon_race",
+      "name": "Marathon race",
+      "sport": "running",
+      "muscles": ["legs", "heart", "lungs", "core"],
+      "description": "Race-day marathon effort with conservative pacing through the first half.",
+      "imageUrl": "https://images.unsplash.com/photo-1530143584546-02191bc84eb5?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=IycZvGlnzY8",
+      "defaultDurationSeconds": 14400,
+      "previewDurationSeconds": 60,
+      "restDurationSeconds": 0
+    },
+    {
+      "id": "burpee",
+      "name": "Burpee",
+      "sport": "tabata",
+      "muscles": ["full_body", "legs", "chest", "core"],
+      "description": "Full-body conditioning movement combining squat, plank, and jump.",
+      "imageUrl": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=dZgVxmf6jkA",
+      "defaultDurationSeconds": 20,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 10
+    },
+    {
+      "id": "mountain_climber",
+      "name": "Mountain climber",
+      "sport": "tabata",
+      "muscles": ["core", "hip_flexors", "shoulders"],
+      "description": "Alternating knee drives from a strong plank position.",
+      "imageUrl": "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=nmwgirgXLYM",
+      "defaultDurationSeconds": 20,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 10
+    },
+    {
+      "id": "jump_squat",
+      "name": "Jump squat",
+      "sport": "tabata",
+      "muscles": ["quads", "glutes", "calves"],
+      "description": "Explosive squat variation for power and short conditioning work.",
+      "imageUrl": "https://images.unsplash.com/photo-1599058917765-a780eda07a3e?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=CVaEhXotL7M",
+      "defaultDurationSeconds": 20,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 10
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "sport": "strength",
+      "muscles": ["core", "shoulders", "glutes"],
+      "description": "Static core hold with steady breathing and neutral spine.",
+      "imageUrl": "https://images.unsplash.com/photo-1562771242-a02d9090c90c?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=pSHjTRCQxIw",
+      "defaultDurationSeconds": 45,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 20
+    },
+    {
+      "id": "mobility_flow",
+      "name": "Runner mobility flow",
+      "sport": "mobility",
+      "muscles": ["hips", "calves", "hamstrings", "glutes", "thoracic_spine"],
+      "description": "Low-intensity mobility flow for hips, ankles, calves, hamstrings, and trunk rotation.",
+      "imageUrl": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80",
+      "videoUrl": "https://www.youtube.com/watch?v=g_tea8ZNk5A",
+      "defaultDurationSeconds": 900,
+      "previewDurationSeconds": 10,
+      "restDurationSeconds": 0
+    }
+  ],
+  "weeks": [
+    {
+      "weekNumber": 1,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-08-03",
+          "activities": [
+            {
+              "id": "activity_w1_monday_intervals",
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "hard",
+              "plannedDurationMinutes": 50,
+              "plannedDistanceKm": 9,
+              "notes": "6 x 800 m at 10K effort with easy jog recoveries.",
+              "completedAt": "2026-08-03T06:58:00.000Z",
+              "exercises": [{ "exerciseId": "interval_sprint_run", "durationSeconds": 3000, "restSeconds": 0 }]
+            },
+            {
+              "id": "activity_w1_monday_mobility",
+              "name": "Post-run mobility",
+              "sport": "mobility",
+              "intensity": "easy",
+              "plannedDurationMinutes": 15,
+              "completedAt": "2026-08-03T07:18:00.000Z",
+              "exercises": [{ "exerciseId": "mobility_flow", "durationSeconds": 900, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-08-04",
+          "activities": [
+            {
+              "id": "activity_w1_tuesday_tabata",
+              "name": "Tabata engine",
+              "sport": "tabata",
+              "intensity": "hard",
+              "plannedDurationMinutes": 24,
+              "completedAt": "2026-08-04T18:29:00.000Z",
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mountain_climber", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "jump_squat", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-08-05",
+          "activities": [
+            {
+              "id": "activity_w1_wednesday_easy",
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 45,
+              "plannedDistanceKm": 8,
+              "completedAt": "2026-08-05T06:52:00.000Z",
+              "exercises": [{ "exerciseId": "easy_run_block", "durationSeconds": 2700, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-08-07",
+          "activities": [
+            {
+              "id": "activity_w1_friday_long",
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 105,
+              "plannedDistanceKm": 19,
+              "notes": "Last 25 minutes steady but controlled.",
+              "exercises": [{ "exerciseId": "progressive_long_run", "durationSeconds": 6300, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "sunday",
+          "date": "2026-08-09",
+          "activities": [
+            {
+              "id": "activity_w1_sunday_tabata",
+              "name": "Tabata mobility blend",
+              "sport": "tabata",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 20,
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 2, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "plank", "rounds": 2, "durationSeconds": 45, "restSeconds": 20 },
+                { "exerciseId": "mobility_flow", "durationSeconds": 600, "restSeconds": 0 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekNumber": 2,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-08-10",
+          "activities": [
+            {
+              "id": "activity_w2_monday_intervals",
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "hard",
+              "plannedDurationMinutes": 55,
+              "plannedDistanceKm": 10,
+              "notes": "5 x 1000 m at threshold effort, relaxed form throughout.",
+              "exercises": [{ "exerciseId": "interval_sprint_run", "durationSeconds": 3300, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-08-11",
+          "activities": [
+            {
+              "id": "activity_w2_tuesday_tabata",
+              "name": "Tabata power",
+              "sport": "tabata",
+              "intensity": "hard",
+              "plannedDurationMinutes": 24,
+              "exercises": [
+                { "exerciseId": "jump_squat", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mountain_climber", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "plank", "rounds": 3, "durationSeconds": 45, "restSeconds": 20 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-08-12",
+          "activities": [
+            {
+              "id": "activity_w2_wednesday_easy",
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 50,
+              "plannedDistanceKm": 9,
+              "exercises": [{ "exerciseId": "easy_run_block", "durationSeconds": 3000, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-08-14",
+          "activities": [
+            {
+              "id": "activity_w2_friday_long",
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 130,
+              "plannedDistanceKm": 23,
+              "notes": "Finish with 35 minutes around marathon effort.",
+              "exercises": [{ "exerciseId": "progressive_long_run", "durationSeconds": 7800, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "sunday",
+          "date": "2026-08-16",
+          "activities": [
+            {
+              "id": "activity_w2_sunday_tabata",
+              "name": "Tabata reset",
+              "sport": "tabata",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 20,
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 2, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mountain_climber", "rounds": 2, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mobility_flow", "durationSeconds": 720, "restSeconds": 0 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekNumber": 3,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-08-17",
+          "activities": [
+            {
+              "id": "activity_w3_monday_intervals",
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "hard",
+              "plannedDurationMinutes": 60,
+              "plannedDistanceKm": 11,
+              "notes": "8 x 600 m fast but smooth, full jog recoveries.",
+              "exercises": [{ "exerciseId": "interval_sprint_run", "durationSeconds": 3600, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-08-18",
+          "activities": [
+            {
+              "id": "activity_w3_tuesday_tabata",
+              "name": "Tabata engine",
+              "sport": "tabata",
+              "intensity": "hard",
+              "plannedDurationMinutes": 24,
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "jump_squat", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "plank", "rounds": 3, "durationSeconds": 45, "restSeconds": 20 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-08-19",
+          "activities": [
+            {
+              "id": "activity_w3_wednesday_easy",
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 55,
+              "plannedDistanceKm": 10,
+              "exercises": [{ "exerciseId": "easy_run_block", "durationSeconds": 3300, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-08-21",
+          "activities": [
+            {
+              "id": "activity_w3_friday_long",
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 155,
+              "plannedDistanceKm": 27,
+              "notes": "Practice race fueling every 30 minutes.",
+              "exercises": [{ "exerciseId": "progressive_long_run", "durationSeconds": 9300, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "sunday",
+          "date": "2026-08-23",
+          "activities": [
+            {
+              "id": "activity_w3_sunday_tabata",
+              "name": "Tabata mobility blend",
+              "sport": "tabata",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 20,
+              "exercises": [
+                { "exerciseId": "mountain_climber", "rounds": 3, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "plank", "rounds": 3, "durationSeconds": 45, "restSeconds": 20 },
+                { "exerciseId": "mobility_flow", "durationSeconds": 600, "restSeconds": 0 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekNumber": 4,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-08-24",
+          "activities": [
+            {
+              "id": "activity_w4_monday_intervals",
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "threshold",
+              "plannedDurationMinutes": 65,
+              "plannedDistanceKm": 12,
+              "notes": "4 x 1600 m at controlled threshold with 3 minute jog recoveries.",
+              "exercises": [{ "exerciseId": "interval_sprint_run", "durationSeconds": 3900, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-08-25",
+          "activities": [
+            {
+              "id": "activity_w4_tuesday_tabata",
+              "name": "Tabata strength",
+              "sport": "tabata",
+              "intensity": "hard",
+              "plannedDurationMinutes": 24,
+              "exercises": [
+                { "exerciseId": "jump_squat", "rounds": 4, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "burpee", "rounds": 3, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "plank", "rounds": 4, "durationSeconds": 45, "restSeconds": 20 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-08-26",
+          "activities": [
+            {
+              "id": "activity_w4_wednesday_easy",
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 45,
+              "plannedDistanceKm": 8,
+              "exercises": [{ "exerciseId": "easy_run_block", "durationSeconds": 2700, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-08-28",
+          "activities": [
+            {
+              "id": "activity_w4_friday_long",
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 175,
+              "plannedDistanceKm": 30,
+              "notes": "Peak long run. Keep first 20 km relaxed.",
+              "exercises": [{ "exerciseId": "progressive_long_run", "durationSeconds": 10500, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "sunday",
+          "date": "2026-08-30",
+          "activities": [
+            {
+              "id": "activity_w4_sunday_tabata",
+              "name": "Tabata reset",
+              "sport": "tabata",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 18,
+              "exercises": [
+                { "exerciseId": "mountain_climber", "rounds": 2, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mobility_flow", "durationSeconds": 780, "restSeconds": 0 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekNumber": 5,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-08-31",
+          "activities": [
+            {
+              "id": "activity_w5_monday_intervals",
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "hard",
+              "plannedDurationMinutes": 50,
+              "plannedDistanceKm": 9,
+              "notes": "10 x 400 m quick but relaxed, stop while sharp.",
+              "exercises": [{ "exerciseId": "interval_sprint_run", "durationSeconds": 3000, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-09-01",
+          "activities": [
+            {
+              "id": "activity_w5_tuesday_tabata",
+              "name": "Tabata tune-up",
+              "sport": "tabata",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 18,
+              "exercises": [
+                { "exerciseId": "burpee", "rounds": 2, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mountain_climber", "rounds": 3, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "plank", "rounds": 2, "durationSeconds": 45, "restSeconds": 20 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-09-02",
+          "activities": [
+            {
+              "id": "activity_w5_wednesday_easy",
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 40,
+              "plannedDistanceKm": 7,
+              "exercises": [{ "exerciseId": "easy_run_block", "durationSeconds": 2400, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-09-04",
+          "activities": [
+            {
+              "id": "activity_w5_friday_long",
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 125,
+              "plannedDistanceKm": 22,
+              "notes": "Reduced long run. Finish with 20 minutes at marathon rhythm.",
+              "exercises": [{ "exerciseId": "progressive_long_run", "durationSeconds": 7500, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "sunday",
+          "date": "2026-09-06",
+          "activities": [
+            {
+              "id": "activity_w5_sunday_tabata",
+              "name": "Light Tabata mobility",
+              "sport": "tabata",
+              "intensity": "easy",
+              "plannedDurationMinutes": 16,
+              "exercises": [
+                { "exerciseId": "plank", "rounds": 2, "durationSeconds": 45, "restSeconds": 20 },
+                { "exerciseId": "mobility_flow", "durationSeconds": 720, "restSeconds": 0 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekNumber": 6,
+      "days": [
+        {
+          "weekday": "monday",
+          "date": "2026-09-07",
+          "activities": [
+            {
+              "id": "activity_w6_monday_intervals",
+              "name": "Interval / sprint",
+              "sport": "running",
+              "intensity": "moderate",
+              "plannedDurationMinutes": 40,
+              "plannedDistanceKm": 7,
+              "notes": "6 x 200 m relaxed strides. Keep this sharp, not tiring.",
+              "exercises": [{ "exerciseId": "interval_sprint_run", "durationSeconds": 2400, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "tuesday",
+          "date": "2026-09-08",
+          "activities": [
+            {
+              "id": "activity_w6_tuesday_tabata",
+              "name": "Primer Tabata",
+              "sport": "tabata",
+              "intensity": "easy",
+              "plannedDurationMinutes": 12,
+              "exercises": [
+                { "exerciseId": "mountain_climber", "rounds": 2, "durationSeconds": 20, "restSeconds": 10 },
+                { "exerciseId": "mobility_flow", "durationSeconds": 480, "restSeconds": 0 }
+              ]
+            }
+          ]
+        },
+        {
+          "weekday": "wednesday",
+          "date": "2026-09-09",
+          "activities": [
+            {
+              "id": "activity_w6_wednesday_easy",
+              "name": "Easy run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 35,
+              "plannedDistanceKm": 6,
+              "exercises": [{ "exerciseId": "easy_run_block", "durationSeconds": 2100, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "friday",
+          "date": "2026-09-11",
+          "activities": [
+            {
+              "id": "activity_w6_friday_long",
+              "name": "Progressive long run",
+              "sport": "running",
+              "intensity": "easy",
+              "plannedDurationMinutes": 35,
+              "plannedDistanceKm": 6,
+              "notes": "Race-eve shakeout. Include four relaxed strides only if legs feel good.",
+              "exercises": [{ "exerciseId": "progressive_long_run", "durationSeconds": 2100, "restSeconds": 0 }]
+            }
+          ]
+        },
+        {
+          "weekday": "saturday",
+          "date": "2026-09-12",
+          "activities": [
+            {
+              "id": "activity_w6_saturday_race",
+              "name": "Marathon 2026-09-12",
+              "sport": "running",
+              "intensity": "race",
+              "plannedDurationMinutes": 240,
+              "plannedDistanceKm": 42.195,
+              "notes": "Start conservative, fuel early, and hold effort through 32 km before racing the final 10 km.",
+              "exercises": [{ "exerciseId": "marathon_race", "durationSeconds": 14400, "restSeconds": 0 }]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notificationRules": [
+    {
+      "id": "daily_plan_review",
+      "kind": "daily",
+      "label": "Daily plan review",
+      "enabled": true,
+      "time": "20:30",
+      "message": "Review tomorrow's session and prepare kit, hydration, and route.",
+      "leadTimeMinutes": 0
+    },
+    {
+      "id": "running_reminder",
+      "kind": "sport_specific",
+      "label": "Running reminder",
+      "enabled": true,
+      "time": "06:45",
+      "sports": ["running"],
+      "message": "{activity} starts soon. Check shoes, route, and hydration.",
+      "leadTimeMinutes": 30
+    },
+    {
+      "id": "tabata_reminder",
+      "kind": "sport_specific",
+      "label": "Tabata reminder",
+      "enabled": true,
+      "time": "18:00",
+      "sports": ["tabata"],
+      "message": "Tabata session: warm up first, then move sharply.",
+      "leadTimeMinutes": 15
+    },
+    {
+      "id": "long_run_reminder",
+      "kind": "weekday",
+      "label": "Long run reminder",
+      "enabled": true,
+      "time": "07:30",
+      "weekdays": ["friday"],
+      "message": "Progressive long run today. Pack gels and keep early kilometers easy.",
+      "leadTimeMinutes": 45
+    },
+    {
+      "id": "rest_period_prompt",
+      "kind": "rest_period",
+      "label": "Rest period prompt",
+      "enabled": true,
+      "time": "18:10",
+      "message": "Use rest periods for nasal breathing and movement quality.",
+      "leadTimeMinutes": 0
+    }
+  ],
+  "bodyMeasurements": [
+    {
+      "measuredAt": "2026-08-02",
+      "weightKg": 78.4,
+      "bmi": 23.8,
+      "bodyFatPercent": 17.5,
+      "waistCm": 84,
+      "hipCm": 96,
+      "chestCm": 102,
+      "armCm": 34,
+      "thighCm": 57,
+      "restingHeartRate": 49,
+      "vo2Max": 53
+    },
+    {
+      "measuredAt": "2026-08-09",
+      "weightKg": 77.9,
+      "bmi": 23.6,
+      "bodyFatPercent": 17.1,
+      "waistCm": 83,
+      "hipCm": 96,
+      "chestCm": 102,
+      "armCm": 34,
+      "thighCm": 57,
+      "restingHeartRate": 48,
+      "vo2Max": 54
+    },
+    {
+      "measuredAt": "2026-08-16",
+      "weightKg": 77.4,
+      "bmi": 23.5,
+      "bodyFatPercent": 16.9,
+      "waistCm": 82.5,
+      "hipCm": 95.5,
+      "chestCm": 102,
+      "armCm": 34,
+      "thighCm": 57,
+      "restingHeartRate": 48,
+      "vo2Max": 54.5
+    },
+    {
+      "measuredAt": "2026-08-23",
+      "weightKg": 77.2,
+      "bmi": 23.4,
+      "bodyFatPercent": 16.7,
+      "waistCm": 82,
+      "hipCm": 95,
+      "chestCm": 102,
+      "armCm": 34,
+      "thighCm": 57,
+      "restingHeartRate": 47,
+      "vo2Max": 55
+    },
+    {
+      "measuredAt": "2026-08-30",
+      "weightKg": 76.9,
+      "bmi": 23.3,
+      "bodyFatPercent": 16.5,
+      "waistCm": 81.5,
+      "hipCm": 95,
+      "chestCm": 101.5,
+      "armCm": 34,
+      "thighCm": 56.5,
+      "restingHeartRate": 47,
+      "vo2Max": 55.5
+    },
+    {
+      "measuredAt": "2026-09-06",
+      "weightKg": 76.8,
+      "bmi": 23.3,
+      "bodyFatPercent": 16.4,
+      "waistCm": 81,
+      "hipCm": 95,
+      "chestCm": 101.5,
+      "armCm": 34,
+      "thighCm": 56.5,
+      "restingHeartRate": 46,
+      "vo2Max": 56
+    }
+  ],
+  "completedExercises": [
+    {
+      "exerciseId": "interval_sprint_run",
+      "activityId": "activity_w1_monday_intervals",
+      "completedAt": "2026-08-03T06:58:00.000Z"
+    },
+    {
+      "exerciseId": "mobility_flow",
+      "activityId": "activity_w1_monday_mobility",
+      "completedAt": "2026-08-03T07:18:00.000Z"
+    },
+    {
+      "exerciseId": "burpee",
+      "activityId": "activity_w1_tuesday_tabata",
+      "completedAt": "2026-08-04T18:12:00.000Z"
+    },
+    {
+      "exerciseId": "mountain_climber",
+      "activityId": "activity_w1_tuesday_tabata",
+      "completedAt": "2026-08-04T18:21:00.000Z"
+    },
+    {
+      "exerciseId": "jump_squat",
+      "activityId": "activity_w1_tuesday_tabata",
+      "completedAt": "2026-08-04T18:29:00.000Z"
+    },
+    {
+      "exerciseId": "easy_run_block",
+      "activityId": "activity_w1_wednesday_easy",
+      "completedAt": "2026-08-05T06:52:00.000Z"
+    }
+  ]
+}

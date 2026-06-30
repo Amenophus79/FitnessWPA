@@ -1,0 +1,140 @@
+export const marathonTabataStartPlanInput = {
+  planId: "marathon-2026-tabata",
+  planName: "Marathon 2026 + Tabata Strength Support",
+  goal: "Support marathon preparation with strength, stability and injury prevention",
+  startDate: "2026-06-17",
+  endDate: "2026-09-12",
+  sports: ["running", "tabata"],
+  bodyTracking: {
+    enabled: true,
+    frequency: "weekly",
+    measurements: ["weightKg", "bmi", "bodyFatPercent", "waistCm", "chestCm", "thighCm", "restingHeartRate", "vo2Max"]
+  },
+  runningSchedule: [
+    { weekday: "Monday", trainingType: "interval_sprint" },
+    { weekday: "Wednesday", trainingType: "easy_run" },
+    { weekday: "Friday", trainingType: "progressive_long_run" }
+  ],
+  activities: [
+    {
+      weekday: "Monday",
+      activities: [
+        { sport: "running", trainingType: "interval_sprint" },
+        { sport: "tabata", trainingType: "running_strength_stability", templateId: "tabata_a" }
+      ]
+    },
+    {
+      weekday: "Wednesday",
+      activities: [
+        { sport: "running", trainingType: "easy_run" },
+        { sport: "tabata", trainingType: "upper_body_core", templateId: "tabata_b" }
+      ]
+    },
+    {
+      weekday: "Friday",
+      activities: [
+        { sport: "running", trainingType: "progressive_long_run" },
+        { sport: "tabata", trainingType: "injury_prevention", templateId: "tabata_c" }
+      ]
+    }
+  ],
+  tabataProtocol: {
+    workSeconds: 20,
+    restSeconds: 10,
+    roundsPerBlock: 8,
+    pauseBetweenBlocksSeconds: 60,
+    previewSeconds: 60,
+    estimatedDurationMinutes: 25
+  },
+  templates: [
+    {
+      id: "tabata_a",
+      name: "Running Strength and Stability",
+      blocks: [
+        {
+          name: "Block 1",
+          exerciseA: { exerciseId: "bodyweight_squat", videoUrl: "https://www.youtube.com/results?search_query=squat+university+bodyweight+squat" },
+          exerciseB: { exerciseId: "glute_bridge", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+glute+bridge" }
+        },
+        {
+          name: "Block 2",
+          exerciseA: { exerciseId: "bulgarian_split_squat_left", videoUrl: "https://www.youtube.com/results?search_query=squat+university+bulgarian+split+squat" },
+          exerciseB: { exerciseId: "bulgarian_split_squat_right", videoUrl: "https://www.youtube.com/results?search_query=squat+university+bulgarian+split+squat" }
+        },
+        {
+          name: "Block 3",
+          exerciseA: { exerciseId: "side_plank_left", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+side+plank" },
+          exerciseB: { exerciseId: "side_plank_right", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+side+plank" }
+        },
+        {
+          name: "Block 4",
+          exerciseA: { exerciseId: "dead_bug", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+dead+bug" },
+          exerciseB: { exerciseId: "bird_dog", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+bird+dog" }
+        }
+      ]
+    },
+    {
+      id: "tabata_b",
+      name: "Upper Body and Core",
+      blocks: [
+        {
+          name: "Block 1",
+          exerciseA: { exerciseId: "push_up", videoUrl: "https://www.youtube.com/results?search_query=squat+university+push+up" },
+          exerciseB: { exerciseId: "plank", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+plank" }
+        },
+        {
+          name: "Block 2",
+          exerciseA: { exerciseId: "superman", videoUrl: "https://www.youtube.com/results?search_query=superman+exercise+technique" },
+          exerciseB: { exerciseId: "reverse_snow_angel", videoUrl: "https://www.youtube.com/results?search_query=reverse+snow+angel+exercise" }
+        },
+        {
+          name: "Block 3",
+          exerciseA: { exerciseId: "hollow_hold", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+hollow+hold" },
+          exerciseB: { exerciseId: "bird_dog", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+bird+dog" }
+        },
+        {
+          name: "Block 4",
+          exerciseA: { exerciseId: "side_plank_left", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+side+plank" },
+          exerciseB: { exerciseId: "side_plank_right", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+side+plank" }
+        }
+      ]
+    },
+    {
+      id: "tabata_c",
+      name: "Injury Prevention",
+      blocks: [
+        {
+          name: "Block 1",
+          exerciseA: { exerciseId: "calf_raise", videoUrl: "https://www.youtube.com/results?search_query=calf+raise+exercise+technique" },
+          exerciseB: { exerciseId: "tibialis_raise", videoUrl: "https://www.youtube.com/results?search_query=knees+over+toes+guy+tibialis+raise" }
+        },
+        {
+          name: "Block 2",
+          exerciseA: { exerciseId: "single_leg_rdl_left", videoUrl: "https://www.youtube.com/results?search_query=squat+university+single+leg+romanian+deadlift" },
+          exerciseB: { exerciseId: "single_leg_rdl_right", videoUrl: "https://www.youtube.com/results?search_query=squat+university+single+leg+romanian+deadlift" }
+        },
+        {
+          name: "Block 3",
+          exerciseA: { exerciseId: "glute_bridge", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+glute+bridge" },
+          exerciseB: { exerciseId: "bird_dog", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+bird+dog" }
+        },
+        {
+          name: "Block 4",
+          exerciseA: { exerciseId: "plank", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+plank" },
+          exerciseB: { exerciseId: "side_plank", videoUrl: "https://www.youtube.com/results?search_query=e3+rehab+side+plank" }
+        }
+      ]
+    }
+  ],
+  periodization: [
+    { phase: "base", start: "2026-06-17", end: "2026-07-15", tabataABlocks: 4, tabataBBlocks: 4, tabataCBlocks: 4 },
+    { phase: "specific", start: "2026-07-16", end: "2026-08-15", tabataABlocks: 4, tabataBBlocks: 4, tabataCBlocks: 3 },
+    { phase: "peak", start: "2026-08-16", end: "2026-08-31", tabataABlocks: 4, tabataBBlocks: 3, tabataCBlocks: 2 },
+    { phase: "taper", start: "2026-09-01", end: "2026-09-12", tabataSessionsPerWeek: 2, blocksPerSession: 2 }
+  ],
+  priorityExercises: ["bulgarian_split_squat", "single_leg_rdl", "glute_bridge", "bird_dog", "side_plank", "tibialis_raise"],
+  notificationRules: [
+    { activity: "running", time: "06:30" },
+    { activity: "tabata", delayAfterRunningHours: 4 }
+  ]
+} as const;
