@@ -1,0 +1,21 @@
+{
+  email {$ACME_EMAIL}
+}
+
+{$PWA_DOMAIN} {
+  encode zstd gzip
+
+  basic_auth {
+    {$PWA_USERNAME} {$PWA_PASSWORD_HASH}
+  }
+
+  header {
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    X-Frame-Options "DENY"
+    -Server
+  }
+
+  reverse_proxy fitness-pwa:3000
+}

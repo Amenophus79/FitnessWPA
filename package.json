@@ -5,21 +5,24 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --port 3000",
-    "build": "next build",
+    "build": "next build && node scripts/generate-service-worker.mjs",
     "start": "next start --hostname 0.0.0.0 --port 3000",
+    "start:https": "node scripts/start-https.mjs",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.1.2",
     "@supabase/supabase-js": "^2.49.1",
     "@tanstack/react-query": "^5.66.0",
-    "@radix-ui/react-slot": "^1.1.2",
+    "better-sqlite3": "^11.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "idb": "^8.0.2",
     "lucide-react": "^0.475.0",
+    "mysql2": "^3.23.3",
     "next": "^15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -28,9 +31,10 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
-    "@eslint/eslintrc": "^3.2.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

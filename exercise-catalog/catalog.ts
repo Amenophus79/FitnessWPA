@@ -224,6 +224,7 @@ export function toExercise(item: ExerciseCatalogItem, overrides: Partial<Exercis
     previewDurationSeconds: overrides.previewDurationSeconds ?? item.previewDurationSeconds,
     restDurationSeconds: overrides.restDurationSeconds ?? item.restDurationSeconds ?? 0,
     rounds: overrides.rounds ?? 1,
+    segments: overrides.segments,
     completedAt: overrides.completedAt
   };
 }

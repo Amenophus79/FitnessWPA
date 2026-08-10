@@ -3,16 +3,21 @@
 import {
   ActivityIcon,
   CalendarDays,
+  CheckCircle2,
   Download,
+  ExternalLink,
   Flame,
   Gauge,
   LineChart,
+  ListChecks,
+  PlayCircle,
   RefreshCw,
   Route,
   ShieldCheck,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,11 +37,12 @@ import { createFitnessExport, stringifyFitnessExport } from "@/features/export/j
 import { createTrainingPlanCreationKit, stringifyTrainingPlanCreationKit } from "@/features/export/plan-creation-kit";
 import { calculateStatistics } from "@/features/statistics/statistics-service";
 import { demoMeasurements, demoPlan } from "@/features/seed/default-plan";
-import { markExerciseCompletedInPlans } from "@/features/training/completion";
+import { markActivityCompletedInPlans, markExerciseCompletedInPlans } from "@/features/training/completion";
 import {
   createLocalFileStoreSnapshot,
   hasLocalFileStoreData,
   loadLocalFileStoreSnapshot,
+  mergeLocalFileStoreSnapshots,
   saveLocalFileStoreSnapshot
 } from "@/services/local-file-store-client";
 import {
@@ -50,7 +56,11 @@ import {
 import {
   deletePlan,
   initializeLocalSeed,
+  listCompletedExercises,
+  listDeletedPlanIds,
   replaceBodyMeasurements,
+  replaceCompletedExercises,
+  replaceDeletedPlanIds,
   replaceExerciseCatalogItems,
   replacePlans,
   saveBodyMeasurement,
@@ -58,17 +68,24 @@ import {
   saveExerciseCatalogItems,
   savePlan
 } from "@/storage/offline-store";
-import type { BodyMeasurement, CompletedExercise, Plan } from "@/types/domain";
+import type { Activity, BodyMeasurement, CompletedExercise, Exercise, ExerciseSegment, Plan } from "@/types/domain";
 
 export function FitnessDashboard() {
   const [allPlans, setAllPlans] = useState<Plan[]>([]);
   const [allMeasurements, setAllMeasurements] = useState<BodyMeasurement[]>(demoMeasurements);
   const [allCompletedExercises, setAllCompletedExercises] = useState<CompletedExercise[]>([]);
+  const [deletedPlanIds, setDeletedPlanIds] = useState<string[]>([]);
   const [catalog, setCatalog] = useState<ExerciseCatalogItem[]>(exerciseCatalog);
   const [activeLocalProfile, setActiveLocalProfile] = useState("");
   const [localUserIdInput, setLocalUserIdInput] = useState("");
   const [isStorageReady, setIsStorageReady] = useState(false);
   const [selectedPlanDate, setSelectedPlanDate] = useState<string>();
+  const [selectedActivityId, setSelectedActivityId] = useState<string>();
+  const [detailSource, setDetailSource] = useState<"today" | "schedule">();
+  const [activeTab, setActiveTab] = useState("plan");
+  const [isSyncingLocalStore, setIsSyncingLocalStore] = useState(false);
+  const [syncStatusMessage, setSyncStatusMessage] = useState("");
+  const dayScrollerRef = useRef<HTMLDivElement>(null);
   const [currentDate] = useState(() => new Date());
   const hasActiveLocalProfile = activeLocalProfile.trim().length > 0;
   const activeLocalUserId = hasActiveLocalProfile ? normalizeLocalUserId(activeLocalProfile) : "";
@@ -108,11 +125,71 @@ export function FitnessDashboard() {
     planDayEntries.filter((entry) => entry.day.date === today);
   const todayActivities = todayDays.flatMap(({ day }) => day.activities);
   const selectedDayActivities = selectedDayEntry?.day.activities ?? [];
+  const selectedActivity = selectedDayActivities.find((activity) => activity.id === selectedActivityId) ?? selectedDayActivities[0];
   const playerActivity =
+    (selectedActivity?.exercises.length ? selectedActivity : undefined) ??
     selectedDayActivities.find((activity) => activity.exercises.length > 0) ??
     todayActivities.find((activity) => activity.exercises.length > 0) ??
     activities.find((activity) => activity.exercises.length > 0);
   const sports = [...new Set(activities.map((activity) => activity.sport))];
+  const syncLocalStoreWithServer = useCallback(async () => {
+    if (!isStorageReady) {
+      return;
+    }
+
+    setIsSyncingLocalStore(true);
+    try {
+      const localSnapshot = createLocalFileStoreSnapshot({
+        plans: allPlans,
+        bodyMeasurements: allMeasurements,
+        exerciseCatalog: catalog,
+        completedExercises: allCompletedExercises,
+        deletedPlanIds
+      });
+      const fileSnapshot = await loadLocalFileStoreSnapshot().catch(() => undefined);
+      const mergedSnapshot = mergeLocalFileStoreSnapshots(localSnapshot, fileSnapshot);
+
+      setAllPlans(mergedSnapshot.plans);
+      setAllMeasurements(mergedSnapshot.bodyMeasurements);
+      setAllCompletedExercises(mergedSnapshot.completedExercises);
+      setDeletedPlanIds(mergedSnapshot.deletedPlanIds ?? []);
+      setCatalog(mergedSnapshot.exerciseCatalog);
+      await Promise.all([
+        replacePlans(mergedSnapshot.plans),
+        replaceBodyMeasurements(mergedSnapshot.bodyMeasurements),
+        replaceCompletedExercises(mergedSnapshot.completedExercises),
+        replaceDeletedPlanIds(mergedSnapshot.deletedPlanIds ?? []),
+        replaceExerciseCatalogItems(mergedSnapshot.exerciseCatalog)
+      ]);
+
+      await saveLocalFileStoreSnapshot(mergedSnapshot);
+      setSyncStatusMessage("Synced local changes to the deployment machine.");
+    } catch {
+      setSyncStatusMessage("Offline: changes are saved on this device and will sync when reachable.");
+    } finally {
+      setIsSyncingLocalStore(false);
+    }
+  }, [allCompletedExercises, allMeasurements, allPlans, catalog, deletedPlanIds, isStorageReady]);
+  const persistLocalFileStore = useCallback(
+    async (
+      nextPlans: Plan[],
+      nextMeasurements: BodyMeasurement[],
+      nextCatalog: ExerciseCatalogItem[],
+      nextCompletedExercises: CompletedExercise[],
+      nextDeletedPlanIds = deletedPlanIds
+    ) => {
+      await saveLocalFileStoreSnapshot(
+        createLocalFileStoreSnapshot({
+          plans: nextPlans,
+          bodyMeasurements: nextMeasurements,
+          exerciseCatalog: nextCatalog,
+          completedExercises: nextCompletedExercises,
+          deletedPlanIds: nextDeletedPlanIds
+        })
+      ).catch(() => undefined);
+    },
+    [deletedPlanIds]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -132,43 +209,37 @@ export function FitnessDashboard() {
           return;
         }
 
-        if (fileSnapshot && hasLocalFileStoreData(fileSnapshot)) {
-          const nextCatalog = fileSnapshot.initialized || fileSnapshot.exerciseCatalog.length > 0 ? fileSnapshot.exerciseCatalog : exerciseCatalog;
-          const localContext = { plans: fileSnapshot.plans, measurements: fileSnapshot.bodyMeasurements };
-          setAllPlans(localContext.plans);
-          setAllMeasurements(localContext.measurements);
-          setAllCompletedExercises(fileSnapshot.completedExercises);
-          setCatalog(nextCatalog);
-          await Promise.all([
-            replacePlans(localContext.plans),
-            replaceBodyMeasurements(localContext.measurements),
-            replaceExerciseCatalogItems(nextCatalog)
-          ]);
-          if (localContext.plans !== fileSnapshot.plans || localContext.measurements !== fileSnapshot.bodyMeasurements) {
-            await saveLocalFileStoreSnapshot(
-              createLocalFileStoreSnapshot({
-                plans: localContext.plans,
-                bodyMeasurements: localContext.measurements,
-                exerciseCatalog: nextCatalog,
-                completedExercises: fileSnapshot.completedExercises
-              })
-            ).catch(() => undefined);
-          }
+        const hasServerSnapshot = Boolean(fileSnapshot && hasLocalFileStoreData(fileSnapshot));
+        const seededCatalog = seeded.exerciseCatalog.length > 0 ? seeded.exerciseCatalog : exerciseCatalog;
+        const useSeededLocalRecords = seeded.seedAlreadyInstalled || !hasServerSnapshot;
+        const localCompletedExercises = useSeededLocalRecords ? await listCompletedExercises().catch(() => []) : [];
+        const localDeletedPlanIds = useSeededLocalRecords ? await listDeletedPlanIds().catch(() => []) : [];
+        if (cancelled) {
           return;
         }
 
-        const seededCatalog = seeded.exerciseCatalog.length > 0 ? seeded.exerciseCatalog : exerciseCatalog;
-        const localContext = { plans: seeded.plans, measurements: seeded.bodyMeasurements };
-        const seededSnapshot = createLocalFileStoreSnapshot({
-          plans: localContext.plans,
-          bodyMeasurements: localContext.measurements,
+        const localSnapshot = createLocalFileStoreSnapshot({
+          plans: useSeededLocalRecords ? seeded.plans : [],
+          bodyMeasurements: useSeededLocalRecords ? seeded.bodyMeasurements : [],
           exerciseCatalog: seededCatalog,
-          completedExercises: []
+          completedExercises: localCompletedExercises,
+          deletedPlanIds: localDeletedPlanIds
         });
-        setAllPlans(seededSnapshot.plans);
-        setAllMeasurements(seededSnapshot.bodyMeasurements);
-        setCatalog(seededSnapshot.exerciseCatalog);
-        await saveLocalFileStoreSnapshot(seededSnapshot).catch(() => undefined);
+        const mergedSnapshot = mergeLocalFileStoreSnapshots(localSnapshot, fileSnapshot);
+
+        setAllPlans(mergedSnapshot.plans);
+        setAllMeasurements(mergedSnapshot.bodyMeasurements);
+        setAllCompletedExercises(mergedSnapshot.completedExercises);
+        setDeletedPlanIds(mergedSnapshot.deletedPlanIds ?? []);
+        setCatalog(mergedSnapshot.exerciseCatalog);
+        await Promise.all([
+          replacePlans(mergedSnapshot.plans),
+          replaceBodyMeasurements(mergedSnapshot.bodyMeasurements),
+          replaceCompletedExercises(mergedSnapshot.completedExercises),
+          replaceDeletedPlanIds(mergedSnapshot.deletedPlanIds ?? []),
+          replaceExerciseCatalogItems(mergedSnapshot.exerciseCatalog)
+        ]);
+        await saveLocalFileStoreSnapshot(mergedSnapshot).catch(() => undefined);
       })
       .catch(() => {
         if (!cancelled) {
@@ -176,6 +247,7 @@ export function FitnessDashboard() {
           setAllPlans(localContext.plans);
           setAllMeasurements(localContext.measurements);
           setAllCompletedExercises([]);
+          setDeletedPlanIds([]);
           setCatalog(exerciseCatalog);
         }
       })
@@ -193,6 +265,19 @@ export function FitnessDashboard() {
   useEffect(() => {
     window.localStorage.removeItem("fitness-pwa.local-user-id");
   }, []);
+
+  useEffect(() => {
+    if (!isStorageReady) {
+      return;
+    }
+
+    const handleOnline = () => {
+      void syncLocalStoreWithServer();
+    };
+
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [isStorageReady, syncLocalStoreWithServer]);
 
   useEffect(() => {
     if (planDayEntries.length === 0) {
@@ -213,6 +298,43 @@ export function FitnessDashboard() {
   }, [planDayEntries, selectedPlanDate, today]);
 
   useEffect(() => {
+    if (!selectedDayEntry) {
+      if (selectedActivityId) {
+        setSelectedActivityId(undefined);
+      }
+      return;
+    }
+
+    if (selectedActivityId && selectedDayEntry.day.activities.some((activity) => activity.id === selectedActivityId)) {
+      return;
+    }
+
+    setSelectedActivityId(selectedDayEntry.day.activities[0]?.id);
+  }, [selectedActivityId, selectedDayEntry]);
+
+  useLayoutEffect(() => {
+    const selectedDate = selectedDayEntry?.day.date;
+    if (activeTab !== "plan" || !selectedDate) {
+      return;
+    }
+
+    const scroller = dayScrollerRef.current;
+    const selectedButton = scroller?.querySelector<HTMLButtonElement>(`[data-plan-date="${selectedDate}"]`);
+
+    if (!scroller || !selectedButton) {
+      return;
+    }
+
+    const firstButton = scroller.querySelector<HTMLButtonElement>("[data-plan-date]");
+    const firstOffset = firstButton?.offsetLeft ?? 0;
+
+    scroller.scrollTo({
+      left: selectedButton.offsetLeft - firstOffset,
+      behavior: "auto"
+    });
+  }, [activeTab, selectedDayEntry, planDayEntries]);
+
+  useEffect(() => {
     if (!isStorageReady || !activeLocalUserId) {
       return;
     }
@@ -231,7 +353,7 @@ export function FitnessDashboard() {
     setAllMeasurements(localContext.measurements);
     void Promise.all([replacePlans(localContext.plans), replaceBodyMeasurements(localContext.measurements)]);
     void persistLocalFileStore(localContext.plans, localContext.measurements, catalog, allCompletedExercises);
-  }, [activeLocalUserId, allCompletedExercises, allMeasurements, allPlans, catalog, isStorageReady]);
+  }, [activeLocalUserId, allCompletedExercises, allMeasurements, allPlans, catalog, isStorageReady, persistLocalFileStore]);
 
   function selectLocalProfile(userId: string) {
     const normalizedUserId = userId.trim();
@@ -246,6 +368,18 @@ export function FitnessDashboard() {
   function logoutLocalProfile() {
     setActiveLocalProfile("");
     setLocalUserIdInput("");
+  }
+
+  function openActivity(
+    activityId: string,
+    date: string,
+    tab: "plan" | "player" = "plan",
+    source: "today" | "schedule" = "schedule"
+  ) {
+    setSelectedPlanDate(date);
+    setSelectedActivityId(activityId);
+    setDetailSource(source);
+    setActiveTab(tab);
   }
 
   async function updateCatalog(nextCatalog: ExerciseCatalogItem[]) {
@@ -277,10 +411,12 @@ export function FitnessDashboard() {
 
     const nextPlans = allPlans.filter((plan) => plan.id !== activePlan.id);
     const nextCompletedExercises = allCompletedExercises.filter((exercise) => exercise.planId !== activePlan.id);
+    const nextDeletedPlanIds = [...new Set([...deletedPlanIds, activePlan.id])];
     setAllPlans(nextPlans);
     setAllCompletedExercises(nextCompletedExercises);
+    setDeletedPlanIds(nextDeletedPlanIds);
     await deletePlan(activePlan.id);
-    await persistLocalFileStore(nextPlans, allMeasurements, catalog, nextCompletedExercises);
+    await persistLocalFileStore(nextPlans, allMeasurements, catalog, nextCompletedExercises, nextDeletedPlanIds);
   }
 
   async function addMeasurement(measurement: BodyMeasurement) {
@@ -293,6 +429,39 @@ export function FitnessDashboard() {
     setAllMeasurements(nextMeasurements);
     await saveBodyMeasurement(userMeasurement);
     await persistLocalFileStore(allPlans, nextMeasurements, catalog, allCompletedExercises);
+  }
+
+  async function completeActivity(activityId: string) {
+    if (!activePlan) {
+      return;
+    }
+
+    const completedAt = new Date().toISOString();
+    const completion = markActivityCompletedInPlans(allPlans, {
+      planId: activePlan.id,
+      activityId,
+      completedAt
+    });
+    const planChanged = completion.plans.some((plan, index) => plan !== allPlans[index]);
+
+    if (!planChanged) {
+      return;
+    }
+
+    const completedExerciseIds = new Set(completion.completedExercises.map((exercise) => exercise.exerciseId));
+    const nextCompletedExercises = [
+      ...allCompletedExercises.filter((exercise) => !completedExerciseIds.has(exercise.exerciseId)),
+      ...completion.completedExercises
+    ];
+
+    setAllPlans(completion.plans);
+    setAllCompletedExercises(nextCompletedExercises);
+    await Promise.all(completion.completedExercises.map((completedExercise) => saveCompletedExercise(completedExercise)));
+    const updatedPlan = completion.plans.find((plan) => plan.id === activePlan.id);
+    if (updatedPlan) {
+      await savePlan(updatedPlan);
+    }
+    await persistLocalFileStore(completion.plans, allMeasurements, catalog, nextCompletedExercises);
   }
 
   async function completeExercise(exerciseId: string, activityId?: string) {
@@ -325,22 +494,6 @@ export function FitnessDashboard() {
       await savePlan(updatedPlan);
     }
     await persistLocalFileStore(completion.plans, allMeasurements, catalog, nextCompletedExercises);
-  }
-
-  async function persistLocalFileStore(
-    nextPlans: Plan[],
-    nextMeasurements: BodyMeasurement[],
-    nextCatalog: ExerciseCatalogItem[],
-    nextCompletedExercises: CompletedExercise[]
-  ) {
-    await saveLocalFileStoreSnapshot(
-      createLocalFileStoreSnapshot({
-        plans: nextPlans,
-        bodyMeasurements: nextMeasurements,
-        exerciseCatalog: nextCatalog,
-        completedExercises: nextCompletedExercises
-      })
-    ).catch(() => undefined);
   }
 
   function downloadExport() {
@@ -454,10 +607,11 @@ export function FitnessDashboard() {
                   Delete Plan
                 </Button>
               ) : null}
-              <Button type="button">
+              <Button type="button" disabled={!isStorageReady || isSyncingLocalStore} onClick={() => void syncLocalStoreWithServer()}>
                 <RefreshCw className="h-4 w-4" aria-hidden />
-                Sync
+                {isSyncingLocalStore ? "Syncing" : "Sync"}
               </Button>
+              {syncStatusMessage ? <p className="basis-full text-xs text-muted-foreground">{syncStatusMessage}</p> : null}
             </div>
           </div>
           <div className="grid gap-3 md:grid-cols-4">
@@ -473,29 +627,60 @@ export function FitnessDashboard() {
             </CardHeader>
             <CardContent className="space-y-2">
               {todayActivities.length > 0 ? (
-                todayActivities.map((activity) => (
-                  <div key={activity.id} className="rounded-md border p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{activity.name}</p>
-                      <Badge>{activity.sport}</Badge>
-                      {activity.completedAt ? <Badge className="bg-primary/10 text-primary">completed</Badge> : null}
+                todayActivities.map((activity) => {
+                  const isCompleted = isActivityComplete(activity);
+
+                  return (
+                    <div key={activity.id} className="rounded-md border p-3">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium">{activity.name}</p>
+                            <Badge>{activity.sport}</Badge>
+                            {activity.intensity ? <Badge>{activity.intensity}</Badge> : null}
+                            {isCompleted ? <Badge className="bg-primary/10 text-primary">completed</Badge> : null}
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">{formatActivitySummary(activity)}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => openActivity(activity.id, today, "plan", "today")}>
+                            <ListChecks className="h-4 w-4" aria-hidden />
+                            Details
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={isCompleted}
+                            onClick={() => void completeActivity(activity.id)}
+                          >
+                            <CheckCircle2 className="h-4 w-4" aria-hidden />
+                            {isCompleted ? "Done" : "Mark Done"}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {activity.plannedDurationMinutes ?? 0} min
-                      {activity.plannedDistanceKm ? ` · ${activity.plannedDistanceKm} km` : ""}
-                    </p>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-sm text-muted-foreground">No planned activities for the active profile today.</p>
               )}
             </CardContent>
           </Card>
+          {detailSource === "today" && selectedDayEntry?.day.date === today && selectedActivity ? (
+            <ActivityDetailsCard
+              activity={selectedActivity}
+              date={today}
+              onOpenPlayer={(activityId) => openActivity(activityId, today, "player", "today")}
+              onClose={() => setDetailSource(undefined)}
+              onCompleteActivity={(activityId) => void completeActivity(activityId)}
+              onCompleteExercise={(exerciseId, activityId) => void completeExercise(exerciseId, activityId)}
+            />
+          ) : null}
         </div>
       </section>
 
       <section className="container py-6">
-        <Tabs defaultValue="plan">
+        <Tabs defaultValue="plan" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full justify-start overflow-x-auto md:w-auto">
             <TabsTrigger value="plan">Plan</TabsTrigger>
             <TabsTrigger value="player">Player</TabsTrigger>
@@ -507,6 +692,7 @@ export function FitnessDashboard() {
           <TabsContent value="plan">
             {activePlan ? (
               <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+                <div className="space-y-4">
                 <Card>
                   <CardHeader>
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -526,7 +712,7 @@ export function FitnessDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      <div ref={dayScrollerRef} className="flex w-full max-w-[37rem] snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
                       {planDayEntries.map(({ weekNumber, day }) => {
                         const isSelected = day.date === selectedDayEntry?.day.date;
                         const isToday = day.date === today;
@@ -535,7 +721,8 @@ export function FitnessDashboard() {
                           <button
                             key={day.id}
                             type="button"
-                            className={`min-w-28 rounded-md border px-3 py-2 text-left text-sm ${
+                            data-plan-date={day.date}
+                              className={`h-24 w-28 flex-none snap-start rounded-md border px-3 py-2 text-left text-sm ${
                               isSelected ? "border-primary bg-primary/10 text-primary" : "bg-background text-foreground"
                             } ${isToday && !isSelected ? "border-primary/60" : ""}`}
                             onClick={() => setSelectedPlanDate(day.date)}
@@ -567,20 +754,51 @@ export function FitnessDashboard() {
                           </div>
                         </div>
                         <div className="grid gap-2">
-                          {selectedDayEntry.day.activities.map((activity) => (
-                            <div key={activity.id} className="rounded-md bg-muted p-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="font-medium">{activity.name}</p>
-                                <Badge>{activity.sport}</Badge>
-                                {activity.intensity ? <Badge>{activity.intensity}</Badge> : null}
-                                {activity.completedAt ? <Badge className="bg-primary/10 text-primary">completed</Badge> : null}
+                          {selectedDayEntry.day.activities.map((activity) => {
+                            const isSelected = detailSource === "schedule" && activity.id === selectedActivity?.id;
+                            const isCompleted = isActivityComplete(activity);
+
+                            return (
+                              <div
+                                key={activity.id}
+                                className={`rounded-md border p-3 ${
+                                  isSelected ? "border-primary bg-primary/10" : "border-transparent bg-muted"
+                                }`}
+                              >
+                                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="font-medium">{activity.name}</p>
+                                      <Badge>{activity.sport}</Badge>
+                                      {activity.intensity ? <Badge>{activity.intensity}</Badge> : null}
+                                      {isCompleted ? <Badge className="bg-primary/10 text-primary">completed</Badge> : null}
+                                    </div>
+                                    <p className="mt-1 text-sm text-muted-foreground">{formatActivitySummary(activity)}</p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant={isSelected ? "secondary" : "outline"}
+                                      onClick={() => openActivity(activity.id, selectedDayEntry.day.date, "plan", "schedule")}
+                                    >
+                                      <ListChecks className="h-4 w-4" aria-hidden />
+                                      Details
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      disabled={isCompleted}
+                                      onClick={() => void completeActivity(activity.id)}
+                                    >
+                                      <CheckCircle2 className="h-4 w-4" aria-hidden />
+                                      {isCompleted ? "Done" : "Mark Done"}
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {activity.plannedDurationMinutes ?? 0} min
-                                {activity.plannedDistanceKm ? ` · ${activity.plannedDistanceKm} km` : ""}
-                              </p>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ) : (
@@ -588,6 +806,17 @@ export function FitnessDashboard() {
                     )}
                   </CardContent>
                 </Card>
+                  {detailSource === "schedule" ? (
+                    <ActivityDetailsCard
+                      activity={selectedActivity}
+                      date={selectedDayEntry?.day.date}
+                      onOpenPlayer={(activityId) => openActivity(activityId, selectedDayEntry?.day.date ?? today, "player", "schedule")}
+                      onClose={() => setDetailSource(undefined)}
+                      onCompleteActivity={(activityId) => void completeActivity(activityId)}
+                      onCompleteExercise={(exerciseId, activityId) => void completeExercise(exerciseId, activityId)}
+                    />
+                  ) : null}
+                </div>
                 <SystemStatusCard
                   isStorageReady={isStorageReady}
                   activeLocalUserId={activeLocalUserId}
@@ -739,11 +968,193 @@ function SystemStatusCard({
         <p>User plans: {planCount}</p>
         <p>User measurements: {measurementCount}</p>
         <p>Initial seed: installation-time only</p>
-        <p>Sync queue: waiting for network events</p>
+        <p>Sync queue: local-file merge on Sync and reconnect</p>
         <p>Plan loading: JSON import available</p>
         <p>Plan generation: requires optional OpenAI server key</p>
       </CardContent>
     </Card>
+  );
+}
+
+function ActivityDetailsCard({
+  activity,
+  date,
+  onOpenPlayer,
+  onClose,
+  onCompleteActivity,
+  onCompleteExercise
+}: {
+  activity?: Activity;
+  date?: string;
+  onOpenPlayer: (activityId: string) => void;
+  onClose: () => void;
+  onCompleteActivity: (activityId: string) => void;
+  onCompleteExercise: (exerciseId: string, activityId: string) => void;
+}) {
+  if (!activity) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle>Training Details</CardTitle>
+              <CardDescription>No activity selected</CardDescription>
+            </div>
+            <Button type="button" variant="ghost" size="icon" aria-label="Close training details" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">Select a scheduled activity to inspect its details.</CardContent>
+      </Card>
+    );
+  }
+
+  const isCompleted = isActivityComplete(activity);
+  const completedExerciseCount = activity.exercises.filter(isExerciseComplete).length;
+  const expectedPace = formatExpectedPace(activity);
+  const expectedSpeed = formatExpectedSpeed(activity);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>{activity.name}</CardTitle>
+            <CardDescription>{date ? `${date} · ${activity.sport}` : activity.sport}</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            {isCompleted ? <Badge className="bg-primary/10 text-primary">completed</Badge> : null}
+            <Button type="button" variant="ghost" size="icon" aria-label="Close training details" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          <Badge>{activity.sport}</Badge>
+          {activity.intensity ? <Badge>{activity.intensity}</Badge> : null}
+          <Badge className="border bg-background text-foreground">{formatActivitySummary(activity)}</Badge>
+          {activity.exercises.length > 0 ? (
+            <Badge className="border bg-background text-foreground">
+              {completedExerciseCount}/{activity.exercises.length} exercises
+            </Badge>
+          ) : null}
+        </div>
+
+        {expectedPace || expectedSpeed ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {expectedPace ? (
+              <div className="rounded-md border p-3">
+                <p className="text-xs uppercase text-muted-foreground">Expected pace</p>
+                <p className="text-lg font-semibold">{expectedPace}</p>
+              </div>
+            ) : null}
+            {expectedSpeed ? (
+              <div className="rounded-md border p-3">
+                <p className="text-xs uppercase text-muted-foreground">Expected speed</p>
+                <p className="text-lg font-semibold">{expectedSpeed}</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {activity.notes ? <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">{activity.notes}</div> : null}
+
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" disabled={isCompleted} onClick={() => onCompleteActivity(activity.id)}>
+            <CheckCircle2 className="h-4 w-4" aria-hidden />
+            {isCompleted ? "Done" : "Mark Done"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={activity.exercises.length === 0}
+            onClick={() => onOpenPlayer(activity.id)}
+          >
+            <PlayCircle className="h-4 w-4" aria-hidden />
+            Player
+          </Button>
+        </div>
+
+        {activity.exercises.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Exercises</p>
+            {activity.exercises.map((exercise) => {
+              const exerciseCompleted = isExerciseComplete(exercise);
+              const segments = getExerciseSegments(activity, exercise);
+
+              return (
+                <div key={exercise.id} className="rounded-md border p-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{exercise.name}</p>
+                        {exerciseCompleted ? <Badge className="bg-primary/10 text-primary">completed</Badge> : null}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{exercise.description}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {exercise.muscles.map((muscle) => (
+                          <Badge key={muscle} className="border bg-background text-foreground">
+                            {formatMuscleName(muscle)}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {exercise.rounds} rounds · {formatSeconds(exercise.defaultDurationSeconds)} work
+                        {exercise.restDurationSeconds ? ` · ${formatSeconds(exercise.restDurationSeconds)} rest` : ""}
+                      </p>
+                      {segments.length > 0 ? <ExerciseSegmentsList segments={segments} /> : null}
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {exercise.media.videoUrl ? (
+                        <Button asChild type="button" size="sm" variant="outline">
+                          <a href={exercise.media.videoUrl} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4" aria-hidden />
+                            Instructions
+                          </a>
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={exerciseCompleted}
+                        onClick={() => onCompleteExercise(exercise.id, activity.id)}
+                      >
+                        <CheckCircle2 className="h-4 w-4" aria-hidden />
+                        {exerciseCompleted ? "Done" : "Mark"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">No individual exercises attached.</div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ExerciseSegmentsList({ segments, depth = 0 }: { segments: ExerciseSegment[]; depth?: number }) {
+  return (
+    <div className={depth === 0 ? "space-y-2 pt-1" : "mt-2 space-y-2 border-l pl-3"}>
+      {segments.map((segment) => (
+        <div key={segment.id} className="rounded-md bg-muted/70 p-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium">{segment.name}</p>
+            {segment.kind ? <Badge className="border bg-background text-foreground">{segment.kind}</Badge> : null}
+            {segment.repeat ? <Badge className="bg-primary/10 text-primary">{segment.repeat}x</Badge> : null}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{formatSegmentSummary(segment)}</p>
+          {segment.notes ? <p className="mt-1 text-xs text-muted-foreground">{segment.notes}</p> : null}
+          {segment.segments?.length ? <ExerciseSegmentsList segments={segment.segments} depth={depth + 1} /> : null}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -817,6 +1228,298 @@ function LocalProfileGate({
       </section>
     </main>
   );
+}
+
+function isActivityComplete(activity: Activity) {
+  return Boolean(activity.completedAt || (activity.exercises.length > 0 && activity.exercises.every(isExerciseComplete)));
+}
+
+function isExerciseComplete(exercise: Exercise) {
+  return Boolean(exercise.completedAt);
+}
+
+function getExerciseSegments(activity: Activity, exercise: Exercise) {
+  if (exercise.segments?.length) {
+    return exercise.segments;
+  }
+
+  if (exercise.sport !== "running") {
+    return [];
+  }
+
+  return inferRunningExerciseSegments(activity, exercise);
+}
+
+function inferRunningExerciseSegments(activity: Activity, exercise: Exercise): ExerciseSegment[] {
+  const totalMinutes = activity.plannedDurationMinutes ?? Math.max(1, Math.round(exercise.defaultDurationSeconds / 60));
+  const totalDistanceKm = activity.plannedDistanceKm;
+  const exerciseKey = `${exercise.catalogId ?? ""} ${exercise.name}`.toLowerCase();
+
+  if (exerciseKey.includes("interval") || exerciseKey.includes("sprint")) {
+    return inferredIntervalSegments(exercise.id, totalMinutes);
+  }
+
+  if (exerciseKey.includes("progressive") || exerciseKey.includes("long run")) {
+    return inferredProgressiveSegments(exercise.id, totalMinutes, totalDistanceKm);
+  }
+
+  if (exerciseKey.includes("marathon race")) {
+    return inferredRaceSegments(exercise.id);
+  }
+
+  return inferredEasyRunSegments(exercise.id, totalMinutes, totalDistanceKm);
+}
+
+function inferredIntervalSegments(exerciseId: string, totalMinutes: number): ExerciseSegment[] {
+  const repeat = totalMinutes >= 53 ? 7 : totalMinutes >= 47 ? 6 : totalMinutes >= 40 ? 5 : 3;
+  const warmupSeconds = 10 * 60;
+  const workSeconds = 3 * 60;
+  const recoverySeconds = 2 * 60;
+  const cooldownSeconds = Math.max(5 * 60, totalMinutes * 60 - warmupSeconds - repeat * (workSeconds + recoverySeconds));
+
+  return [
+    {
+      id: `${exerciseId}-warmup`,
+      name: "Warmup jog",
+      kind: "warmup",
+      durationSeconds: warmupSeconds,
+      distanceKm: 1.5,
+      intensity: "easy"
+    },
+    {
+      id: `${exerciseId}-main-set`,
+      name: "Main interval set",
+      kind: "work",
+      repeat,
+      segments: [
+        {
+          id: `${exerciseId}-fast-interval`,
+          name: "Fast interval",
+          kind: "work",
+          durationSeconds: workSeconds,
+          distanceKm: 0.8,
+          targetPace: "10K effort",
+          intensity: "hard"
+        },
+        {
+          id: `${exerciseId}-jog-recovery`,
+          name: "Easy jog recovery",
+          kind: "recovery",
+          durationSeconds: recoverySeconds,
+          distanceKm: 0.25,
+          targetPace: "easy jog",
+          intensity: "recovery"
+        }
+      ]
+    },
+    {
+      id: `${exerciseId}-cooldown`,
+      name: "Cooldown jog",
+      kind: "cooldown",
+      durationSeconds: cooldownSeconds,
+      distanceKm: 1,
+      intensity: "easy"
+    }
+  ];
+}
+
+function inferredEasyRunSegments(exerciseId: string, totalMinutes: number, totalDistanceKm?: number): ExerciseSegment[] {
+  const warmupMinutes = Math.min(10, Math.max(5, Math.round(totalMinutes * 0.2)));
+  const cooldownMinutes = Math.min(5, Math.max(3, Math.round(totalMinutes * 0.1)));
+  const steadyMinutes = Math.max(10, totalMinutes - warmupMinutes - cooldownMinutes);
+  const distances = splitDistance(totalDistanceKm, [warmupMinutes, steadyMinutes, cooldownMinutes], [0.2, 0.7, 0.1]);
+
+  return [
+    {
+      id: `${exerciseId}-warmup`,
+      name: "Ease into pace",
+      kind: "warmup",
+      durationSeconds: warmupMinutes * 60,
+      distanceKm: distances[0],
+      intensity: "easy"
+    },
+    {
+      id: `${exerciseId}-aerobic`,
+      name: "Conversational aerobic run",
+      kind: "work",
+      durationSeconds: steadyMinutes * 60,
+      distanceKm: distances[1],
+      targetPace: "conversational",
+      intensity: "easy"
+    },
+    {
+      id: `${exerciseId}-finish`,
+      name: "Relaxed finish",
+      kind: "cooldown",
+      durationSeconds: cooldownMinutes * 60,
+      distanceKm: distances[2],
+      intensity: "recovery"
+    }
+  ];
+}
+
+function inferredProgressiveSegments(exerciseId: string, totalMinutes: number, totalDistanceKm?: number): ExerciseSegment[] {
+  const easyMinutes = Math.round(totalMinutes * 0.6);
+  const steadyMinutes = Math.round(totalMinutes * 0.25);
+  const finishMinutes = Math.max(5, totalMinutes - easyMinutes - steadyMinutes);
+  const distances = splitDistance(totalDistanceKm, [easyMinutes, steadyMinutes, finishMinutes], [0.58, 0.27, 0.15]);
+
+  return [
+    {
+      id: `${exerciseId}-easy-opening`,
+      name: "Easy aerobic opening",
+      kind: "warmup",
+      durationSeconds: easyMinutes * 60,
+      distanceKm: distances[0],
+      targetPace: "easy",
+      intensity: "easy"
+    },
+    {
+      id: `${exerciseId}-steady-middle`,
+      name: "Steady middle",
+      kind: "work",
+      durationSeconds: steadyMinutes * 60,
+      distanceKm: distances[1],
+      targetPace: "steady",
+      intensity: "moderate"
+    },
+    {
+      id: `${exerciseId}-controlled-finish`,
+      name: "Controlled finish",
+      kind: "work",
+      durationSeconds: finishMinutes * 60,
+      distanceKm: distances[2],
+      targetPace: "marathon rhythm",
+      intensity: "threshold"
+    }
+  ];
+}
+
+function inferredRaceSegments(exerciseId: string): ExerciseSegment[] {
+  return [
+    {
+      id: `${exerciseId}-opening`,
+      name: "Conservative opening",
+      kind: "work",
+      distanceKm: 10,
+      targetPace: "slower than goal pace",
+      intensity: "moderate"
+    },
+    {
+      id: `${exerciseId}-middle`,
+      name: "Settle and fuel",
+      kind: "work",
+      distanceKm: 22,
+      targetPace: "goal marathon pace",
+      intensity: "race",
+      notes: "Fuel early and keep effort controlled through 32 km."
+    },
+    {
+      id: `${exerciseId}-final-10k`,
+      name: "Final 10 km",
+      kind: "work",
+      distanceKm: 10.2,
+      targetPace: "race by feel",
+      intensity: "race"
+    }
+  ];
+}
+
+function splitDistance(totalDistanceKm: number | undefined, durations: number[], fallbackShares: number[]) {
+  if (!totalDistanceKm) {
+    return durations.map(() => undefined);
+  }
+
+  const totalDuration = durations.reduce((sum, duration) => sum + duration, 0);
+
+  return durations.map((duration, index) => {
+    const share = totalDuration > 0 ? duration / totalDuration : fallbackShares[index] ?? 0;
+    return Number((totalDistanceKm * share).toFixed(1));
+  });
+}
+
+function formatActivitySummary(activity: Activity) {
+  const parts = [`${activity.plannedDurationMinutes ?? 0} min`];
+
+  if (activity.plannedDistanceKm) {
+    parts.push(`${activity.plannedDistanceKm} km`);
+  }
+
+  if (activity.exercises.length > 0) {
+    parts.push(`${activity.exercises.length} exercises`);
+  }
+
+  return parts.join(" · ");
+}
+
+function formatExpectedPace(activity: Activity) {
+  if (!activity.plannedDurationMinutes || !activity.plannedDistanceKm) {
+    return undefined;
+  }
+
+  return formatPace(activity.plannedDurationMinutes * 60, activity.plannedDistanceKm);
+}
+
+function formatPace(durationSeconds: number, distanceKm: number) {
+  const secondsPerKm = Math.round(durationSeconds / distanceKm);
+  const minutes = Math.floor(secondsPerKm / 60);
+  const seconds = secondsPerKm % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")} min/km`;
+}
+
+function formatExpectedSpeed(activity: Activity) {
+  if (!activity.plannedDurationMinutes || !activity.plannedDistanceKm) {
+    return undefined;
+  }
+
+  return `${((activity.plannedDistanceKm / activity.plannedDurationMinutes) * 60).toFixed(1)} km/h`;
+}
+
+function formatSegmentSummary(segment: ExerciseSegment) {
+  const parts = [];
+
+  if (segment.durationSeconds) {
+    parts.push(formatSeconds(segment.durationSeconds));
+  }
+
+  if (segment.distanceKm) {
+    parts.push(`${segment.distanceKm} km`);
+  }
+
+  if (segment.durationSeconds && segment.distanceKm) {
+    parts.push(formatPace(segment.durationSeconds, segment.distanceKm));
+    parts.push(`${((segment.distanceKm / segment.durationSeconds) * 3600).toFixed(1)} km/h`);
+  }
+
+  if (segment.targetPace) {
+    parts.push(segment.targetPace);
+  }
+
+  if (segment.targetSpeedKmh) {
+    parts.push(`${segment.targetSpeedKmh.toFixed(1)} km/h target`);
+  }
+
+  if (segment.intensity) {
+    parts.push(segment.intensity);
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : "Structured segment";
+}
+
+function formatSeconds(seconds: number) {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+}
+
+function formatMuscleName(value: string) {
+  return value.replaceAll("_", " ");
 }
 
 function toLocalIsoDate(date: Date) {

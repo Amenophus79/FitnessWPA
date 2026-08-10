@@ -1,0 +1,74 @@
+name: fitness-pwa-server
+
+services:
+  fitness-pwa:
+    build:
+      context: ../..
+      dockerfile: deploy/server/Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    restart: unless-stopped
+    init: true
+    environment:
+      LOCAL_DATA_DIR: /app/data
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      MARIADB_HOST: ${MARIADB_HOST:-}
+      MARIADB_PORT: ${MARIADB_PORT:-3306}
+      MARIADB_USER: ${MARIADB_USER:-}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-homeassistant}
+      MARIADB_SSL: ${MARIADB_SSL:-false}
+    expose:
+      - "3000"
+    volumes:
+      - fitness_data:/app/data
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:3000/').then(response=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      fitness-pwa:
+        condition: service_healthy
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in deploy/server/server.env}
+      PWA_DOMAIN: ${PWA_DOMAIN:?Set PWA_DOMAIN in deploy/server/server.env}
+      PWA_USERNAME: ${PWA_USERNAME:?Set PWA_USERNAME in deploy/server/server.env}
+      PWA_PASSWORD_HASH: ${PWA_PASSWORD_HASH:?Set PWA_PASSWORD_HASH in deploy/server/server.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  backend:
+
+volumes:
+  fitness_data:
+  caddy_data:
+  caddy_config:

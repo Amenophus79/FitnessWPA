@@ -44,6 +44,10 @@ export function ExercisePlayerPanel({
   }, [exercise, state.phase]);
 
   useEffect(() => {
+    setState(createInitialPlayerState(exercises));
+  }, [exercises]);
+
+  useEffect(() => {
     if (state.phase === "complete") {
       return;
     }

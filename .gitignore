@@ -10,3 +10,8 @@ yarn-error.log*
 pnpm-debug.log*
 *.tsbuildinfo
 data/*.json
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+.local-certs/
+deploy/server/server.env

@@ -5,8 +5,8 @@ import { mergeExerciseCatalogs } from "@/exercise-catalog/schema";
 import { normalizeTrainingPlanInput } from "@/features/import/compact-marathon-tabata-normalizer";
 import { dateForWeekday, daysBetween, resolveEndDate } from "@/services/date";
 import { createId } from "@/services/id";
-import type { Exercise, Plan } from "@/types/domain";
-import type { TrainingPlanImport } from "@/types/import";
+import type { Exercise, ExerciseSegment, Plan } from "@/types/domain";
+import type { ImportedExerciseSegment, TrainingPlanImport } from "@/types/import";
 
 export const sportSchema = z.enum([
   "running",
@@ -61,11 +61,28 @@ const notificationRuleSchema = z.object({
   leadTimeMinutes: z.number().int().nonnegative().optional()
 });
 
+const exerciseSegmentSchema: z.ZodType<ImportedExerciseSegment> = z.lazy(() =>
+  z.object({
+    id: z.string().min(1).optional(),
+    name: z.string().min(1),
+    kind: z.enum(["warmup", "work", "recovery", "rest", "cooldown", "instruction"]).optional(),
+    durationSeconds: z.number().int().positive().optional(),
+    distanceKm: z.number().nonnegative().optional(),
+    targetPace: z.string().min(1).optional(),
+    targetSpeedKmh: z.number().positive().optional(),
+    intensity: z.enum(["recovery", "easy", "moderate", "threshold", "hard", "race"]).optional(),
+    notes: z.string().optional(),
+    repeat: z.number().int().positive().optional(),
+    segments: z.array(exerciseSegmentSchema).min(1).optional()
+  })
+);
+
 const importedActivityExerciseSchema = z.object({
   exerciseId: z.string().min(1),
   rounds: z.number().int().positive().optional(),
   durationSeconds: z.number().int().positive().optional(),
-  restSeconds: z.number().int().nonnegative().optional()
+  restSeconds: z.number().int().nonnegative().optional(),
+  segments: z.array(exerciseSegmentSchema).min(1).optional()
 });
 
 const importedActivitySchema = z.object({
@@ -215,7 +232,8 @@ export function toPlan(source: TrainingPlanImport, userId?: string, options: Par
                 defaultDurationSeconds: activityExercise.durationSeconds ?? definition.defaultDurationSeconds,
                 previewDurationSeconds: definition.previewDurationSeconds,
                 restDurationSeconds: activityExercise.restSeconds ?? definition.restDurationSeconds ?? 0,
-                rounds: activityExercise.rounds ?? 1
+                rounds: activityExercise.rounds ?? 1,
+                segments: activityExercise.segments ? toExerciseSegments(activityExercise.segments) : undefined
               };
             })
           }))
@@ -238,4 +256,20 @@ export function toPlan(source: TrainingPlanImport, userId?: string, options: Par
     updatedAt: now,
     syncStatus: "pending"
   };
+}
+
+function toExerciseSegments(segments: ImportedExerciseSegment[]): ExerciseSegment[] {
+  return segments.map((segment) => ({
+    id: segment.id ?? createId("segment"),
+    name: segment.name,
+    kind: segment.kind,
+    durationSeconds: segment.durationSeconds,
+    distanceKm: segment.distanceKm,
+    targetPace: segment.targetPace,
+    targetSpeedKmh: segment.targetSpeedKmh,
+    intensity: segment.intensity,
+    notes: segment.notes,
+    repeat: segment.repeat,
+    segments: segment.segments ? toExerciseSegments(segment.segments) : undefined
+  }));
 }

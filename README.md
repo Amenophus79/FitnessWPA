@@ -13,11 +13,12 @@ Offline-first multi-sport training planner built with Next.js 15, TypeScript, Ta
 - Body tracking charts and statistics for streak, weekly volume, distance, completion, and body trends.
 - Browser notification scheduling.
 - Optional OpenAI service for JSON-only plan generation.
-- Local JSON file persistence for Docker/Node runs without Supabase.
+- Transactional SQLite persistence for Docker/Node runs without Supabase.
+- Optional MariaDB replication with automatic Home Assistant service discovery.
 
 ## Quick Start
 
-Docker Compose is a supported first execution option:
+Docker Compose builds and runs the production application, including the generated offline app shell:
 
 ```bash
 docker compose up --build
@@ -29,7 +30,7 @@ Open:
 http://localhost:3000
 ```
 
-Local Node.js is equally supported:
+For local development with hot reload:
 
 ```bash
 npm install
@@ -46,7 +47,7 @@ No environment variables are required for the local offline-first demo. Copy `.e
 
 ## Local Network Access
 
-The development server binds to `0.0.0.0` on port `3000`, so other devices on the same local network can open the app with this URL:
+The development server binds to `0.0.0.0` on port `3000`, so other devices on the same local network can inspect the current UI with this URL:
 
 ```text
 http://<local-machine-ip>:3000
@@ -73,9 +74,13 @@ http://192.168.1.42:3000
 
 If the app does not load from another device, check that both devices are on the same network and that the macOS firewall allows incoming connections for the dev server.
 
-Local Docker/Node runs persist user data to `data/local-store.json` by default. Set `LOCAL_DATA_DIR` for direct Node.js runs or `LOCAL_DATA_HOST_DIR` for Docker when the JSON storage should live outside the repository/container. Plans and exercise catalog changes survive restarts without Supabase.
+This plain HTTP development URL is not an installable offline deployment on iOS. Service workers require a secure HTTPS origin; the `localhost` exception applies only to the machine that runs the browser. Use a regular HTTPS deployment or the trusted local HTTPS setup described in `INSTALL.md` before adding the app to an iPhone or iPad Home Screen.
 
-Target deployment is Vercel. Docker remains a valid local execution path for development and testing.
+Local Docker/Node runs persist user data to `data/fitness-pwa.sqlite` by default. Set `LOCAL_DATA_DIR` for direct Node.js runs or `LOCAL_DATA_HOST_DIR` for Docker when SQLite should live outside the repository/container. An existing `local-store.json` in the same directory is imported once and then retained as a legacy backup.
+
+SQLite remains the durable local mirror when MariaDB is enabled. A Home Assistant app discovers `/services/mysql` automatically; regular Docker deployments can provide the `MARIADB_*` variables from `.env.example`. At startup the highest database revision is copied to the stale or empty store. Writes commit to SQLite first, so a MariaDB outage does not make the app unavailable.
+
+Target deployment is Vercel. Docker provides a production-equivalent local build; the optional iOS Compose override serves that build with a user-supplied trusted certificate.
 
 ## Scripts
 
@@ -83,6 +88,7 @@ Target deployment is Vercel. Docker remains a valid local execution path for dev
 npm run dev
 npm run build
 npm run start
+npm run start:https
 npm run typecheck
 npm run test
 npm run lint
@@ -94,6 +100,12 @@ Target hosted deployment is Vercel, with optional Supabase and OpenAI integratio
 
 ```text
 VERCEL_DEPLOYMENT.md
+```
+
+For a self-hosted Docker server with automatic HTTPS, persistent data, and access protection, see:
+
+```text
+deploy/server/README.md
 ```
 
 ## Seed Plan And Catalog

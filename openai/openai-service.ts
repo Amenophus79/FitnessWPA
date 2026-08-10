@@ -85,6 +85,8 @@ export function buildTrainingPlanInput(
         "Use ISO dates in YYYY-MM-DD format.",
         "Provide either endDate or durationDays, never both.",
         "Every activity exerciseId must reference an existing catalog ID, a root exercises item, or a root exerciseCatalog item.",
+        "For every running activity, put the warmup, main run work, recoveries, cooldown, target pace/speed, and distances in the activity exercise segments array.",
+        "Use repeat on a segment when a group of child segments repeats, for example a 6x interval main set. Regular easy runs should still include at least a warmup segment before the main aerobic segment.",
         "The existing exercise catalog below is authoritative. Reuse its exercise IDs whenever the movement or sport intent fits.",
         "Do not duplicate or redefine an existing catalog exercise in root exercises or root exerciseCatalog.",
         "Only create a new exercise when no existing catalog item fits the requested movement.",

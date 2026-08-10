@@ -224,7 +224,10 @@ Expected without key:
 5. If Supabase is configured, test login/invitation redirect URLs.
 6. Import `specs/SAMPLE_PLANS/MARATHON_2026_SAMPLE_PLAN.json`.
 7. Record a body measurement.
-8. Disconnect network or use browser devtools offline mode and confirm local behavior still works.
+8. Wait until the Service Worker is active, close the app, enable offline mode, and confirm a cold launch renders the profile screen.
+9. Use the app online once, close it, remain offline, and confirm a warm launch renders local IndexedDB data.
+10. Confirm `/api/local-store` and other APIs fail as network requests while offline instead of returning cached HTML.
+11. Deploy a second build and confirm the new worker activates only after its complete app shell has been downloaded.
 
 ## 8. Security Checklist
 

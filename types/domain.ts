@@ -24,6 +24,7 @@ export type Weekday =
   | "sunday";
 
 export type ActivityIntensity = "recovery" | "easy" | "moderate" | "threshold" | "hard" | "race";
+export type ExerciseSegmentKind = "warmup" | "work" | "recovery" | "rest" | "cooldown" | "instruction";
 export type NotificationKind = "daily" | "weekday" | "rest_period" | "sport_specific";
 export type SyncStatus = "pending" | "synced" | "conflict";
 
@@ -97,7 +98,22 @@ export interface Exercise {
   previewDurationSeconds: number;
   restDurationSeconds: number;
   rounds: number;
+  segments?: ExerciseSegment[];
   completedAt?: string;
+}
+
+export interface ExerciseSegment {
+  id: string;
+  name: string;
+  kind?: ExerciseSegmentKind;
+  durationSeconds?: number;
+  distanceKm?: number;
+  targetPace?: string;
+  targetSpeedKmh?: number;
+  intensity?: ActivityIntensity;
+  notes?: string;
+  repeat?: number;
+  segments?: ExerciseSegment[];
 }
 
 export interface ExerciseMedia {

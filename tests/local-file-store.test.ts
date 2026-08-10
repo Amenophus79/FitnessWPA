@@ -1,11 +1,13 @@
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   defaultLocalFileStoreSnapshot,
+  legacyLocalStorePath,
   localStorePath,
   readLocalFileStore,
+  shutdownLocalStore,
   writeLocalFileStore
 } from "@/storage/local-file-store";
 
@@ -15,7 +17,8 @@ beforeEach(async () => {
   process.env.LOCAL_DATA_DIR = await mkdtemp(path.join(tmpdir(), "fitness-pwa-store-"));
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await shutdownLocalStore();
   if (originalLocalDataDir === undefined) {
     delete process.env.LOCAL_DATA_DIR;
   } else {
@@ -23,12 +26,13 @@ afterEach(() => {
   }
 });
 
-describe("local file store", () => {
-  it("returns an empty snapshot when no file exists", async () => {
+describe("local SQLite store", () => {
+  it("returns an empty snapshot when no database exists", async () => {
     await expect(readLocalFileStore()).resolves.toStrictEqual(defaultLocalFileStoreSnapshot());
+    expect(localStorePath()).toContain("fitness-pwa.sqlite");
   });
 
-  it("writes and reads a JSON snapshot", async () => {
+  it("writes and reads a snapshot from SQLite", async () => {
     const saved = await writeLocalFileStore({
       initialized: true,
       plans: [],
@@ -48,11 +52,42 @@ describe("local file store", () => {
       completedExercises: []
     });
 
-    expect(localStorePath()).toContain("local-store.json");
     await expect(readLocalFileStore()).resolves.toMatchObject({
       initialized: true,
       updatedAt: saved.updatedAt,
       exerciseCatalog: [{ id: "bodyweight_squat" }]
     });
+  });
+
+  it("imports an existing JSON snapshot once into SQLite", async () => {
+    await writeFile(
+      legacyLocalStorePath(),
+      JSON.stringify({
+        initialized: true,
+        updatedAt: "2026-08-01T10:00:00.000Z",
+        plans: [],
+        bodyMeasurements: [],
+        exerciseCatalog: [],
+        completedExercises: [],
+        deletedPlanIds: ["legacy-plan"]
+      })
+    );
+
+    await expect(readLocalFileStore()).resolves.toMatchObject({ deletedPlanIds: ["legacy-plan"] });
+
+    await shutdownLocalStore();
+    await writeFile(
+      legacyLocalStorePath(),
+      JSON.stringify({
+        initialized: true,
+        plans: [],
+        bodyMeasurements: [],
+        exerciseCatalog: [],
+        completedExercises: [],
+        deletedPlanIds: ["stale-json-change"]
+      })
+    );
+
+    await expect(readLocalFileStore()).resolves.toMatchObject({ deletedPlanIds: ["legacy-plan"] });
   });
 });

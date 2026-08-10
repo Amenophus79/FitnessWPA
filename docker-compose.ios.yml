@@ -1,0 +1,13 @@
+services:
+  app:
+    command: npm run start:https
+    ports:
+      - "3443:3443"
+    environment:
+      LOCAL_HTTPS_HOST: 0.0.0.0
+      LOCAL_HTTPS_PORT: 3443
+      LOCAL_TLS_CERT_PATH: /run/fitness-pwa-tls/cert.pem
+      LOCAL_TLS_KEY_PATH: /run/fitness-pwa-tls/key.pem
+    volumes:
+      - ${LOCAL_TLS_CERT_FILE:?Set LOCAL_TLS_CERT_FILE to a trusted certificate}:/run/fitness-pwa-tls/cert.pem:ro
+      - ${LOCAL_TLS_KEY_FILE:?Set LOCAL_TLS_KEY_FILE to its private key}:/run/fitness-pwa-tls/key.pem:ro

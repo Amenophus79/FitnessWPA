@@ -1,3 +1,43 @@
+const exerciseSegmentBaseProperties = {
+  id: { type: "string" },
+  name: { type: "string" },
+  kind: {
+    type: "string",
+    enum: ["warmup", "work", "recovery", "rest", "cooldown", "instruction"]
+  },
+  durationSeconds: { type: "integer", minimum: 1 },
+  distanceKm: { type: "number", minimum: 0 },
+  targetPace: { type: "string" },
+  targetSpeedKmh: { type: "number", minimum: 0 },
+  intensity: {
+    type: "string",
+    enum: ["recovery", "easy", "moderate", "threshold", "hard", "race"]
+  },
+  notes: { type: "string" },
+  repeat: { type: "integer", minimum: 1 }
+} as const;
+
+const nestedExerciseSegmentJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["name"],
+  properties: exerciseSegmentBaseProperties
+} as const;
+
+const exerciseSegmentJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["name"],
+  properties: {
+    ...exerciseSegmentBaseProperties,
+    segments: {
+      type: "array",
+      minItems: 1,
+      items: nestedExerciseSegmentJsonSchema
+    }
+  }
+} as const;
+
 export const trainingPlanJsonSchema = {
   type: "object",
   additionalProperties: false,
@@ -165,7 +205,12 @@ export const trainingPlanJsonSchema = {
                             exerciseId: { type: "string" },
                             rounds: { type: "integer", minimum: 1 },
                             durationSeconds: { type: "integer", minimum: 1 },
-                            restSeconds: { type: "integer", minimum: 0 }
+                            restSeconds: { type: "integer", minimum: 0 },
+                            segments: {
+                              type: "array",
+                              minItems: 1,
+                              items: exerciseSegmentJsonSchema
+                            }
                           }
                         }
                       }

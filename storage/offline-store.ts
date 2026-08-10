@@ -4,6 +4,7 @@ import type { ExerciseCatalogItem } from "@/exercise-catalog/catalog";
 import type { BodyMeasurement, CompletedExercise, Plan, Statistics } from "@/types/domain";
 
 const initialSeedMetadataKey = "initialSeedInstalled";
+const deletedPlanIdsMetadataKey = "deletedPlanIds";
 
 export interface LocalSeedData {
   plans: Plan[];
@@ -14,8 +15,9 @@ export interface LocalSeedData {
 export async function initializeLocalSeed(seed: LocalSeedData) {
   const db = await getDatabase();
   const seedState = await db.get("metadata", initialSeedMetadataKey);
+  const seedAlreadyInstalled = Boolean(seedState?.value);
 
-  if (!seedState?.value) {
+  if (!seedAlreadyInstalled) {
     const existingPlans = await db.getAll("plans");
     const existingMeasurements = await db.getAll("bodyMeasurements");
     const existingCatalog = await db.getAll("exerciseCatalog");
@@ -44,7 +46,8 @@ export async function initializeLocalSeed(seed: LocalSeedData) {
   return {
     plans: await db.getAll("plans"),
     bodyMeasurements: await db.getAll("bodyMeasurements"),
-    exerciseCatalog: await db.getAll("exerciseCatalog")
+    exerciseCatalog: await db.getAll("exerciseCatalog"),
+    seedAlreadyInstalled
   };
 }
 
@@ -57,6 +60,7 @@ export async function savePlan(plan: Plan) {
 export async function deletePlan(planId: string) {
   const db = await getDatabase();
   await db.delete("plans", planId);
+  await addDeletedPlanId(planId);
   await enqueueSync("plan", planId, "delete");
 }
 
@@ -98,6 +102,14 @@ export async function saveCompletedExercise(completedExercise: CompletedExercise
 
 export async function listCompletedExercises() {
   return (await getDatabase()).getAll("completedExercises");
+}
+
+export async function replaceCompletedExercises(completedExercises: CompletedExercise[]) {
+  const db = await getDatabase();
+  const tx = db.transaction("completedExercises", "readwrite");
+  await tx.store.clear();
+  await Promise.all(completedExercises.map((completedExercise) => tx.store.put(completedExercise)));
+  await tx.done;
 }
 
 export async function saveExerciseCatalogItems(items: ExerciseCatalogItem[]) {
@@ -149,4 +161,24 @@ export async function listSyncQueue() {
 
 export async function removeSyncItem(id: string) {
   return (await getDatabase()).delete("syncQueue", id);
+}
+
+export async function listDeletedPlanIds() {
+  const db = await getDatabase();
+  const record = await db.get("metadata", deletedPlanIdsMetadataKey);
+  return Array.isArray(record?.value) ? record.value.filter((id): id is string => typeof id === "string") : [];
+}
+
+export async function replaceDeletedPlanIds(planIds: string[]) {
+  const db = await getDatabase();
+  await db.put("metadata", {
+    key: deletedPlanIdsMetadataKey,
+    value: [...new Set(planIds)],
+    updatedAt: new Date().toISOString()
+  });
+}
+
+async function addDeletedPlanId(planId: string) {
+  const deletedPlanIds = await listDeletedPlanIds();
+  await replaceDeletedPlanIds([...deletedPlanIds, planId]);
 }

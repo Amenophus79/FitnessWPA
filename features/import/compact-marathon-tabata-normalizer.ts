@@ -1,5 +1,12 @@
 import { addDays, daysBetween, weekdays } from "@/services/date";
-import type { ImportedActivity, ImportedActivityExercise, ImportedExerciseDefinition, ImportedWeek, TrainingPlanImport } from "@/types/import";
+import type {
+  ImportedActivity,
+  ImportedActivityExercise,
+  ImportedExerciseDefinition,
+  ImportedExerciseSegment,
+  ImportedWeek,
+  TrainingPlanImport
+} from "@/types/import";
 import type { ActivityIntensity, Sport, Weekday } from "@/types/domain";
 
 interface CompactExerciseReference {
@@ -235,7 +242,8 @@ function buildRunningActivity(trainingType: string, phase: CompactPeriodizationP
       {
         exerciseId: details.exerciseId,
         durationSeconds: details.minutes * 60,
-        restSeconds: 0
+        restSeconds: 0,
+        segments: runningSegments(details.exerciseId, details.minutes, details.distanceKm, phaseName)
       }
     ]
   };
@@ -249,8 +257,179 @@ function buildRaceActivity(): ImportedActivity {
     plannedDurationMinutes: 240,
     plannedDistanceKm: 42.2,
     notes: "Race day represented as the final running activity on the plan end date.",
-    exercises: [{ exerciseId: "marathon_race", durationSeconds: 14_400, restSeconds: 0 }]
+    exercises: [
+      {
+        exerciseId: "marathon_race",
+        durationSeconds: 14_400,
+        restSeconds: 0,
+        segments: raceSegments()
+      }
+    ]
   };
+}
+
+function runningSegments(exerciseId: string, totalMinutes: number, totalDistanceKm: number, phaseName: string): ImportedExerciseSegment[] {
+  if (exerciseId === "interval_sprint_run") {
+    return intervalRunSegments(totalMinutes, phaseName);
+  }
+
+  if (exerciseId === "progressive_long_run") {
+    return progressiveRunSegments(totalMinutes, totalDistanceKm);
+  }
+
+  return easyRunSegments(totalMinutes, totalDistanceKm);
+}
+
+function intervalRunSegments(totalMinutes: number, phaseName: string): ImportedExerciseSegment[] {
+  const repeatByPhase: Record<string, number> = {
+    base: 6,
+    specific: 7,
+    peak: 5,
+    taper: 3
+  };
+  const repeat = repeatByPhase[phaseName] ?? 6;
+  const warmupSeconds = 10 * 60;
+  const workSeconds = 3 * 60;
+  const recoverySeconds = 2 * 60;
+  const cooldownSeconds = Math.max(5 * 60, totalMinutes * 60 - warmupSeconds - repeat * (workSeconds + recoverySeconds));
+
+  return [
+    {
+      name: "Warmup jog",
+      kind: "warmup",
+      durationSeconds: warmupSeconds,
+      distanceKm: 1.5,
+      intensity: "easy",
+      notes: "Include relaxed drills or strides if they are already part of your routine."
+    },
+    {
+      name: "Main interval set",
+      kind: "work",
+      repeat,
+      segments: [
+        {
+          name: "Fast interval",
+          kind: "work",
+          durationSeconds: workSeconds,
+          distanceKm: 0.8,
+          targetPace: "10K effort",
+          intensity: "hard"
+        },
+        {
+          name: "Easy jog recovery",
+          kind: "recovery",
+          durationSeconds: recoverySeconds,
+          distanceKm: 0.25,
+          targetPace: "easy jog",
+          intensity: "recovery"
+        }
+      ]
+    },
+    {
+      name: "Cooldown jog",
+      kind: "cooldown",
+      durationSeconds: cooldownSeconds,
+      distanceKm: 1,
+      intensity: "easy"
+    }
+  ];
+}
+
+function easyRunSegments(totalMinutes: number, totalDistanceKm: number): ImportedExerciseSegment[] {
+  const warmupMinutes = Math.min(10, Math.max(5, Math.round(totalMinutes * 0.2)));
+  const cooldownMinutes = Math.min(5, Math.max(3, Math.round(totalMinutes * 0.1)));
+  const steadyMinutes = Math.max(10, totalMinutes - warmupMinutes - cooldownMinutes);
+  const warmupDistance = Number((totalDistanceKm * (warmupMinutes / totalMinutes)).toFixed(1));
+  const cooldownDistance = Number((totalDistanceKm * (cooldownMinutes / totalMinutes)).toFixed(1));
+  const steadyDistance = Number(Math.max(0, totalDistanceKm - warmupDistance - cooldownDistance).toFixed(1));
+
+  return [
+    {
+      name: "Ease into pace",
+      kind: "warmup",
+      durationSeconds: warmupMinutes * 60,
+      distanceKm: warmupDistance,
+      intensity: "easy"
+    },
+    {
+      name: "Conversational aerobic run",
+      kind: "work",
+      durationSeconds: steadyMinutes * 60,
+      distanceKm: steadyDistance,
+      targetPace: "conversational",
+      intensity: "easy"
+    },
+    {
+      name: "Relaxed finish",
+      kind: "cooldown",
+      durationSeconds: cooldownMinutes * 60,
+      distanceKm: cooldownDistance,
+      intensity: "recovery"
+    }
+  ];
+}
+
+function progressiveRunSegments(totalMinutes: number, totalDistanceKm: number): ImportedExerciseSegment[] {
+  const easyMinutes = Math.round(totalMinutes * 0.6);
+  const steadyMinutes = Math.round(totalMinutes * 0.25);
+  const finishMinutes = Math.max(5, totalMinutes - easyMinutes - steadyMinutes);
+  const easyDistance = Number((totalDistanceKm * 0.58).toFixed(1));
+  const steadyDistance = Number((totalDistanceKm * 0.27).toFixed(1));
+  const finishDistance = Number(Math.max(0, totalDistanceKm - easyDistance - steadyDistance).toFixed(1));
+
+  return [
+    {
+      name: "Easy aerobic opening",
+      kind: "warmup",
+      durationSeconds: easyMinutes * 60,
+      distanceKm: easyDistance,
+      targetPace: "easy",
+      intensity: "easy"
+    },
+    {
+      name: "Steady middle",
+      kind: "work",
+      durationSeconds: steadyMinutes * 60,
+      distanceKm: steadyDistance,
+      targetPace: "steady",
+      intensity: "moderate"
+    },
+    {
+      name: "Controlled finish",
+      kind: "work",
+      durationSeconds: finishMinutes * 60,
+      distanceKm: finishDistance,
+      targetPace: "marathon rhythm",
+      intensity: "threshold"
+    }
+  ];
+}
+
+function raceSegments(): ImportedExerciseSegment[] {
+  return [
+    {
+      name: "Conservative opening",
+      kind: "work",
+      distanceKm: 10,
+      targetPace: "slower than goal pace",
+      intensity: "moderate"
+    },
+    {
+      name: "Settle and fuel",
+      kind: "work",
+      distanceKm: 22,
+      targetPace: "goal marathon pace",
+      intensity: "race",
+      notes: "Fuel early and keep effort controlled through 32 km."
+    },
+    {
+      name: "Final 10 km",
+      kind: "work",
+      distanceKm: 10.2,
+      targetPace: "race by feel",
+      intensity: "race"
+    }
+  ];
 }
 
 function runningDetails(trainingType: string, phaseName: string) {

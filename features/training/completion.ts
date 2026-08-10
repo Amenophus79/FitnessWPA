@@ -7,6 +7,12 @@ export interface CompleteExerciseInput {
   completedAt: string;
 }
 
+export interface CompleteActivityInput {
+  planId: string;
+  activityId: string;
+  completedAt: string;
+}
+
 export function markExerciseCompletedInPlans(plans: Plan[], input: CompleteExerciseInput) {
   let completedExercise: CompletedExercise | undefined;
 
@@ -71,4 +77,63 @@ export function markExerciseCompletedInPlans(plans: Plan[], input: CompleteExerc
   });
 
   return { plans: nextPlans, completedExercise };
+}
+
+export function markActivityCompletedInPlans(plans: Plan[], input: CompleteActivityInput) {
+  const completedExercises: CompletedExercise[] = [];
+
+  const nextPlans = plans.map((plan) => {
+    if (plan.id !== input.planId) {
+      return plan;
+    }
+
+    let planChanged = false;
+
+    const weeks = plan.weeks.map((week) => ({
+      ...week,
+      days: week.days.map((day) => ({
+        ...day,
+        activities: day.activities.map((activity) => {
+          if (activity.id !== input.activityId) {
+            return activity;
+          }
+
+          planChanged = true;
+          const exercises = activity.exercises.map((exercise) => {
+            const completedAt = exercise.completedAt ?? input.completedAt;
+
+            completedExercises.push({
+              exerciseId: exercise.id,
+              activityId: activity.id,
+              planId: plan.id,
+              userId: plan.userId,
+              completedAt
+            });
+
+            return {
+              ...exercise,
+              completedAt
+            };
+          });
+
+          return {
+            ...activity,
+            completedAt: activity.completedAt ?? input.completedAt,
+            exercises
+          };
+        })
+      }))
+    }));
+
+    return planChanged
+      ? {
+          ...plan,
+          weeks,
+          updatedAt: input.completedAt,
+          syncStatus: "pending" as const
+        }
+      : plan;
+  });
+
+  return { plans: nextPlans, completedExercises };
 }

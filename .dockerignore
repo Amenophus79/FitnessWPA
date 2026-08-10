@@ -3,5 +3,9 @@ node_modules
 coverage
 .git
 .env*
+.local-certs
+deploy/server/server.env
+data
+fitness-pwa-data-backup.tar.gz
 npm-debug.log*
 docker-compose.yml

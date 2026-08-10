@@ -1,0 +1,24 @@
+name: Fitness PWA
+version: "0.2.0"
+slug: fitness_pwa
+description: Offline-first training planner with SQLite and optional MariaDB replication
+url: https://github.com/Amenophus79/home-assistant-fitness-pwa
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+backup: cold
+webui: http://[HOST]:[PORT:3000]
+ports:
+  3000/tcp: 3000
+ports_description:
+  3000/tcp: Fitness PWA web interface
+services:
+  - mysql:want
+environment:
+  LOCAL_DATA_DIR: /data
+  MARIADB_DATABASE: homeassistant
+options: {}
+schema: {}
+stage: experimental

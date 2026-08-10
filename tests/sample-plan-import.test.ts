@@ -19,6 +19,7 @@ describe("sample plan imports", () => {
     expect(firstDay?.weekday).toBe("monday");
     expect(firstDay?.date).toBe("2026-06-22");
     expect(firstDay?.activities.map((activity) => activity.sport)).toStrictEqual(["running", "tabata"]);
+    expect(firstDay?.activities[0]?.exercises[0]?.segments?.some((segment) => segment.repeat && segment.repeat > 1)).toBe(true);
 
     const raceDay = result.plan.weeks
       .flatMap((week) => week.days)

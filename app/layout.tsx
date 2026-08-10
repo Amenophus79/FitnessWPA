@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   title: "Fitness PWA",
   description: "Offline-first multi-sport training planner",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" }
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", type: "image/png", sizes: "180x180" }]
+  },
   appleWebApp: {
     capable: true,
     title: "Fitness PWA",

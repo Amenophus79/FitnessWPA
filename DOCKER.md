@@ -34,18 +34,18 @@ The compose service:
 
 Supabase and OpenAI environment variables are optional. Empty values keep the local offline-first app usable; only the matching integration features are unavailable.
 
-## Local JSON Persistence
+## Local SQLite Persistence
 
 The Docker service writes app data to:
 
 ```text
-/app/data/local-store.json
+/app/data/fitness-pwa.sqlite
 ```
 
 By default, Compose mounts `./data` to `/app/data`, so the same file is available on the host as:
 
 ```text
-data/local-store.json
+data/fitness-pwa.sqlite
 ```
 
 To keep the storage outside the repository and outside the container, set `LOCAL_DATA_HOST_DIR` before starting Docker:
@@ -61,7 +61,9 @@ LOCAL_DATA_HOST_DIR=/Users/you/FitnessPWA-storage
 LOCAL_DATA_CONTAINER_DIR=/app/data
 ```
 
-The app inside the container receives `LOCAL_DATA_DIR=/app/data`, so no app code needs to know the host path.
+The app inside the container receives `LOCAL_DATA_DIR=/app/data`, so no app code needs to know the host path. Existing `local-store.json` data is imported automatically on the first SQLite start.
+
+MariaDB is optional. Set the `MARIADB_*` values from `.env.example` to replicate the SQLite state into an existing MariaDB database. SQLite remains current when that service is unavailable and catches MariaDB up after connectivity returns or the container restarts.
 
 The file stores:
 

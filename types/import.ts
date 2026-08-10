@@ -1,6 +1,7 @@
 import type {
   ActivityIntensity,
   BodyMeasurement,
+  ExerciseSegmentKind,
   NotificationRule,
   Sport,
   Weekday
@@ -60,4 +61,19 @@ export interface ImportedActivityExercise {
   rounds?: number;
   durationSeconds?: number;
   restSeconds?: number;
+  segments?: ImportedExerciseSegment[];
+}
+
+export interface ImportedExerciseSegment {
+  id?: string;
+  name: string;
+  kind?: ExerciseSegmentKind;
+  durationSeconds?: number;
+  distanceKm?: number;
+  targetPace?: string;
+  targetSpeedKmh?: number;
+  intensity?: ActivityIntensity;
+  notes?: string;
+  repeat?: number;
+  segments?: ImportedExerciseSegment[];
 }

@@ -8,4 +8,5 @@ export interface LocalFileStoreSnapshot {
   bodyMeasurements: BodyMeasurement[];
   exerciseCatalog: ExerciseCatalogItem[];
   completedExercises: CompletedExercise[];
+  deletedPlanIds?: string[];
 }
