@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/amenophus79/fitness-pwa
+  IMAGE_NAME: ghcr.io/amenophus79/ha_fitnesswpa
 
 jobs:
   publish:
@@ -18,6 +18,11 @@ jobs:
     steps:
       - name: Check out private source
         uses: actions/checkout@v4
+
+      - name: Validate Home Assistant repository token
+        env:
+          HA_REPO_TOKEN: ${{ secrets.HA_FITNESS_PWA_REPO_TOKEN }}
+        run: test -n "$HA_REPO_TOKEN"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -53,3 +58,49 @@ jobs:
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=
             NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+      - name: Update public Home Assistant metadata
+        env:
+          HA_REPO_TOKEN: ${{ secrets.HA_FITNESS_PWA_REPO_TOKEN }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: |
+          RELEASE_VERSION="${RELEASE_VERSION#v}"
+          metadata_dir="$RUNNER_TEMP/ha-fitness-pwa"
+          git clone --depth 1 "https://x-access-token:${HA_REPO_TOKEN}@github.com/Amenophus79/HA_FitnessWPA.git" "$metadata_dir"
+
+          RELEASE_VERSION="$RELEASE_VERSION" METADATA_DIR="$metadata_dir" node --input-type=module <<'NODE'
+          import { readFile, writeFile } from "node:fs/promises";
+          import path from "node:path";
+
+          const version = process.env.RELEASE_VERSION;
+          const metadataDir = process.env.METADATA_DIR;
+          if (!/^\d+\.\d+\.\d+$/.test(version)) {
+            throw new Error(`Release tag is not semantic versioning: ${version}`);
+          }
+
+          const configPath = path.join(metadataDir, "fitness-pwa", "config.yaml");
+          const changelogPath = path.join(metadataDir, "fitness-pwa", "CHANGELOG.md");
+          const config = await readFile(configPath, "utf8");
+          const updatedConfig = config.replace(/^version:\s*.*$/m, `version: "${version}"`);
+          if (updatedConfig === config) {
+            throw new Error("Could not find the Home Assistant app version field.");
+          }
+          await writeFile(configPath, updatedConfig);
+
+          const changelog = await readFile(changelogPath, "utf8");
+          const entry = `## ${version}\n\n- Published the matching private Fitness PWA image.\n\n`;
+          if (!changelog.includes(`## ${version}`)) {
+            await writeFile(changelogPath, changelog.replace("# Changelog\n", `# Changelog\n\n${entry}`));
+          }
+          NODE
+
+          npm --prefix "$metadata_dir" test
+          git -C "$metadata_dir" config user.name "github-actions[bot]"
+          git -C "$metadata_dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$metadata_dir" add fitness-pwa/config.yaml fitness-pwa/CHANGELOG.md
+          if git -C "$metadata_dir" diff --cached --quiet; then
+            echo "Home Assistant metadata already matches ${RELEASE_VERSION}."
+          else
+            git -C "$metadata_dir" commit -m "Release Fitness PWA ${RELEASE_VERSION}"
+            git -C "$metadata_dir" push origin main
+          fi
