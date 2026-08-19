@@ -65,8 +65,8 @@ export async function discoverMariaDb(options: MariaDbDiscoveryOptions = {}): Pr
     return {
       host: service.host,
       port: parsePort(service.port, 3306),
-      username: service.username,
-      password: service.password,
+      username: env.MARIADB_USER || service.username,
+      password: env.MARIADB_PASSWORD ?? service.password,
       database:
         env.MARIADB_DATABASE || (typeof service.database === "string" ? service.database : "homeassistant"),
       ssl: service.ssl === true,

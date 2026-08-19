@@ -22,7 +22,11 @@ environment:
 options:
   openai_api_key: ""
   openai_model: gpt-5.2
+  mariadb_user: ""
+  mariadb_password: ""
 schema:
   openai_api_key: password?
   openai_model: str
+  mariadb_user: str?
+  mariadb_password: password?
 stage: experimental
