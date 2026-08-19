@@ -3,6 +3,7 @@ import type { LocalFileStoreSnapshot } from "@/types/local-store";
 export function defaultLocalFileStoreSnapshot(): LocalFileStoreSnapshot {
   return {
     initialized: false,
+    profiles: [],
     plans: [],
     bodyMeasurements: [],
     exerciseCatalog: [],
@@ -19,6 +20,7 @@ export function normalizeLocalFileStoreSnapshot(input: unknown): LocalFileStoreS
   return {
     initialized: Boolean(input.initialized),
     updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : undefined,
+    profiles: Array.isArray(input.profiles) ? input.profiles.filter((id): id is string => typeof id === "string" && id.trim().length > 0) : [],
     plans: Array.isArray(input.plans) ? input.plans : [],
     bodyMeasurements: Array.isArray(input.bodyMeasurements) ? input.bodyMeasurements : [],
     exerciseCatalog: Array.isArray(input.exerciseCatalog) ? input.exerciseCatalog : [],
@@ -30,6 +32,7 @@ export function normalizeLocalFileStoreSnapshot(input: unknown): LocalFileStoreS
 export function hasLocalFileStoreSnapshotData(snapshot: LocalFileStoreSnapshot) {
   return (
     snapshot.initialized ||
+    Boolean(snapshot.profiles?.length) ||
     snapshot.plans.length > 0 ||
     snapshot.bodyMeasurements.length > 0 ||
     snapshot.exerciseCatalog.length > 0 ||

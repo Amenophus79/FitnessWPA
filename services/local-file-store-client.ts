@@ -29,12 +29,14 @@ export async function saveLocalFileStoreSnapshot(snapshot: LocalFileStoreSnapsho
 export function createLocalFileStoreSnapshot({
   plans,
   bodyMeasurements,
+  profiles = [],
   exerciseCatalog,
   completedExercises = [],
   deletedPlanIds = []
 }: {
   plans: Plan[];
   bodyMeasurements: BodyMeasurement[];
+  profiles?: string[];
   exerciseCatalog: ExerciseCatalogItem[];
   completedExercises?: CompletedExercise[];
   deletedPlanIds?: string[];
@@ -42,6 +44,7 @@ export function createLocalFileStoreSnapshot({
   return {
     initialized: true,
     updatedAt: new Date().toISOString(),
+    profiles: [...new Set(profiles.map((id) => id.trim()).filter(Boolean))],
     plans,
     bodyMeasurements,
     exerciseCatalog,
@@ -68,6 +71,7 @@ export function mergeLocalFileStoreSnapshots(
   return {
     initialized: true,
     updatedAt: newestTimestamp(localSnapshot.updatedAt, remoteSnapshot.updatedAt) ?? new Date().toISOString(),
+    profiles: [...new Set([...(localSnapshot.profiles ?? []), ...(remoteSnapshot.profiles ?? [])])],
     plans: mergeRecords(localSnapshot.plans, remoteSnapshot.plans, (plan) => plan.id, (plan) => plan.updatedAt ?? plan.createdAt).filter(
       (plan) => !deletedPlanIdSet.has(plan.id)
     ),
@@ -91,6 +95,7 @@ export function mergeLocalFileStoreSnapshots(
 export function hasLocalFileStoreData(snapshot: LocalFileStoreSnapshot) {
   return (
     snapshot.initialized ||
+    Boolean(snapshot.profiles?.length) ||
     snapshot.plans.length > 0 ||
     snapshot.bodyMeasurements.length > 0 ||
     snapshot.exerciseCatalog.length > 0 ||

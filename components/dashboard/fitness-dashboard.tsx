@@ -72,6 +72,7 @@ import type { Activity, BodyMeasurement, CompletedExercise, Exercise, ExerciseSe
 
 export function FitnessDashboard() {
   const [allPlans, setAllPlans] = useState<Plan[]>([]);
+  const [localProfiles, setLocalProfiles] = useState<string[]>([]);
   const [allMeasurements, setAllMeasurements] = useState<BodyMeasurement[]>(demoMeasurements);
   const [allCompletedExercises, setAllCompletedExercises] = useState<CompletedExercise[]>([]);
   const [deletedPlanIds, setDeletedPlanIds] = useState<string[]>([]);
@@ -97,7 +98,10 @@ export function FitnessDashboard() {
     () => allMeasurements.filter((measurement) => belongsToLocalUser(measurement.userId, activeLocalUserId)),
     [activeLocalUserId, allMeasurements]
   );
-  const knownLocalUserIds = useMemo(() => getKnownLocalUserIds(allPlans, allMeasurements), [allPlans, allMeasurements]);
+  const knownLocalUserIds = useMemo(
+    () => [...new Set([...localProfiles, ...getKnownLocalUserIds(allPlans, allMeasurements)])].sort((a, b) => a.localeCompare(b)),
+    [allMeasurements, allPlans, localProfiles]
+  );
   const activePlan = plans[0];
   const today = toLocalIsoDate(currentDate);
   const todayLabel = formatCurrentDay(currentDate);
@@ -142,6 +146,7 @@ export function FitnessDashboard() {
       const localSnapshot = createLocalFileStoreSnapshot({
         plans: allPlans,
         bodyMeasurements: allMeasurements,
+        profiles: localProfiles,
         exerciseCatalog: catalog,
         completedExercises: allCompletedExercises,
         deletedPlanIds
@@ -150,6 +155,7 @@ export function FitnessDashboard() {
       const mergedSnapshot = mergeLocalFileStoreSnapshots(localSnapshot, fileSnapshot);
 
       setAllPlans(mergedSnapshot.plans);
+      setLocalProfiles(mergedSnapshot.profiles ?? []);
       setAllMeasurements(mergedSnapshot.bodyMeasurements);
       setAllCompletedExercises(mergedSnapshot.completedExercises);
       setDeletedPlanIds(mergedSnapshot.deletedPlanIds ?? []);
@@ -169,7 +175,7 @@ export function FitnessDashboard() {
     } finally {
       setIsSyncingLocalStore(false);
     }
-  }, [allCompletedExercises, allMeasurements, allPlans, catalog, deletedPlanIds, isStorageReady]);
+  }, [allCompletedExercises, allMeasurements, allPlans, catalog, deletedPlanIds, isStorageReady, localProfiles]);
   const persistLocalFileStore = useCallback(
     async (
       nextPlans: Plan[],
@@ -182,13 +188,14 @@ export function FitnessDashboard() {
         createLocalFileStoreSnapshot({
           plans: nextPlans,
           bodyMeasurements: nextMeasurements,
+          profiles: localProfiles,
           exerciseCatalog: nextCatalog,
           completedExercises: nextCompletedExercises,
           deletedPlanIds: nextDeletedPlanIds
         })
       ).catch(() => undefined);
     },
-    [deletedPlanIds]
+    [deletedPlanIds, localProfiles]
   );
 
   useEffect(() => {
@@ -221,6 +228,7 @@ export function FitnessDashboard() {
         const localSnapshot = createLocalFileStoreSnapshot({
           plans: useSeededLocalRecords ? seeded.plans : [],
           bodyMeasurements: useSeededLocalRecords ? seeded.bodyMeasurements : [],
+          profiles: [],
           exerciseCatalog: seededCatalog,
           completedExercises: localCompletedExercises,
           deletedPlanIds: localDeletedPlanIds
@@ -228,6 +236,7 @@ export function FitnessDashboard() {
         const mergedSnapshot = mergeLocalFileStoreSnapshots(localSnapshot, fileSnapshot);
 
         setAllPlans(mergedSnapshot.plans);
+        setLocalProfiles(mergedSnapshot.profiles ?? []);
         setAllMeasurements(mergedSnapshot.bodyMeasurements);
         setAllCompletedExercises(mergedSnapshot.completedExercises);
         setDeletedPlanIds(mergedSnapshot.deletedPlanIds ?? []);
@@ -363,6 +372,18 @@ export function FitnessDashboard() {
 
     setActiveLocalProfile(normalizedUserId);
     setLocalUserIdInput(normalizedUserId);
+    const nextProfiles = [...new Set([...localProfiles, normalizedUserId])];
+    setLocalProfiles(nextProfiles);
+    void saveLocalFileStoreSnapshot(
+      createLocalFileStoreSnapshot({
+        profiles: nextProfiles,
+        plans: allPlans,
+        bodyMeasurements: allMeasurements,
+        exerciseCatalog: catalog,
+        completedExercises: allCompletedExercises,
+        deletedPlanIds
+      })
+    ).catch(() => undefined);
   }
 
   function logoutLocalProfile() {
