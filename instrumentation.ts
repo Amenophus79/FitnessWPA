@@ -3,6 +3,8 @@ export async function register() {
     return;
   }
 
+  const { loadHomeAssistantOptions } = await import("@/runtime-options");
+  await loadHomeAssistantOptions();
   const { initializeLocalStore } = await import("@/storage/local-file-store");
   await initializeLocalStore();
 }

@@ -67,6 +67,9 @@ jobs:
           RELEASE_VERSION="${RELEASE_VERSION#v}"
           metadata_dir="$RUNNER_TEMP/ha-fitness-pwa"
           git clone --depth 1 "https://x-access-token:${HA_REPO_TOKEN}@github.com/Amenophus79/HA_FitnessWPA.git" "$metadata_dir"
+          # Keep the published app options (including the OpenAI key field)
+          # in sync with the source repository.
+          cp deploy/home-assistant/fitness-pwa/config.yaml "$metadata_dir/fitness-pwa/config.yaml"
 
           RELEASE_VERSION="$RELEASE_VERSION" METADATA_DIR="$metadata_dir" node --input-type=module <<'NODE'
           import { readFile, writeFile } from "node:fs/promises";

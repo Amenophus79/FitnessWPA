@@ -19,6 +19,10 @@ services:
 environment:
   LOCAL_DATA_DIR: /data
   MARIADB_DATABASE: homeassistant
-options: {}
-schema: {}
+options:
+  openai_api_key: ""
+  openai_model: gpt-5.2
+schema:
+  openai_api_key: password?
+  openai_model: str
 stage: experimental
