@@ -3,6 +3,7 @@ version: "0.2.0"
 slug: fitness_pwa
 description: Offline-first training planner with SQLite and optional MariaDB replication
 url: https://github.com/Amenophus79/home-assistant-fitness-pwa
+image: ghcr.io/amenophus79/ha_fitnesswpa
 arch:
   - aarch64
   - amd64
